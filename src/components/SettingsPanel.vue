@@ -20,7 +20,7 @@ function isWideField(key: string) {
 
 <template>
   <div class="flex-1 overflow-auto">
-    <div class="max-w-2xl mx-auto px-6 py-8">
+    <div class="max-w-6xl mx-auto px-6 py-8">
 
       <!-- Header -->
       <div class="mb-8">

@@ -377,7 +377,12 @@ export const useRepoStore = defineStore("repo", () => {
 
     const sanitized = folderName
       .split("/")
-      .map((part) => part.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, ""))
+      .map((part) =>
+        part
+          .toLowerCase()
+          .replace(/[^a-z0-9._-]+/g, "-")
+          .replace(/^-+|-+$/g, ""),
+      )
       .filter(Boolean)
       .join("/");
 
