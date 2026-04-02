@@ -18,16 +18,30 @@ const search = ref('')
 const thumbs = ref<Map<string, string>>(new Map())
 const expandedFolders = ref<Set<string>>(new Set(['/']))
 
+const assetsRoot = computed(() => repo.config?.assets_path ?? '')
+
+function toAssetsRelativePath(path: string) {
+  const root = assetsRoot.value
+  if (!root) return path
+  if (path === root) return '/'
+  if (path.startsWith(root + '/')) return path.slice(root.length + 1)
+  return path
+}
+
 const filteredAssets = computed(() => {
   const q = search.value.toLowerCase()
-  return repo.assetTree.filter(a => a.name.toLowerCase().includes(q) || a.path.toLowerCase().includes(q))
+  return repo.assetTree.filter(a => {
+    const relPath = toAssetsRelativePath(a.path).toLowerCase()
+    return a.name.toLowerCase().includes(q) || relPath.includes(q)
+  })
 })
 
 const groupedAssets = computed(() => {
   const groups: Record<string, typeof repo.assetTree> = { '/': [] }
 
   for (const node of filteredAssets.value) {
-    const parts = node.path.split('/')
+    const relativePath = toAssetsRelativePath(node.path)
+    const parts = relativePath.split('/')
     const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '/'
 
     if (dir !== '/') {
