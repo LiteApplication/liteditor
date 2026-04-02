@@ -62,6 +62,8 @@ export default {
     configError: 'Erreur de configuration',
     carousels: 'Carrousels',
     addImage: 'Ajouter une image',
+    newAssetFolder: 'Nouveau dossier média',
+    newAssetFolderPrompt: 'Nom du nouveau dossier média (vous pouvez utiliser / pour imbriquer) :',
   },
 
   // ─── Context menu ──────────────────────────────────────────────────────────

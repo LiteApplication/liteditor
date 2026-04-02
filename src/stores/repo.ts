@@ -75,6 +75,7 @@ export const useRepoStore = defineStore("repo", () => {
   const fileTree = ref<TreeNode[]>([]);
   const treeLoading = ref(false);
   const customFolders = ref<string[]>([]);
+  const customAssetFolders = ref<string[]>([]);
   const assetTree = ref<TreeNode[]>([]);
   const stagedFiles = ref<Map<string, StagedFile>>(new Map());
   const stagedDeletions = ref<Set<string>>(new Set());
@@ -129,6 +130,7 @@ export const useRepoStore = defineStore("repo", () => {
     configError.value = null;
     fileTree.value = [];
     assetTree.value = [];
+    customAssetFolders.value = [];
     stagedFiles.value = new Map();
     stagedCarousels.value = new Map();
     activeCarouselKey.value = null;
@@ -179,18 +181,21 @@ export const useRepoStore = defineStore("repo", () => {
           stagedFiles.value = new Map(wk.stagedFiles || []);
           stagedDeletions.value = new Set(wk.stagedDeletions || []);
           customFolders.value = wk.customFolders || [];
+          customAssetFolders.value = wk.customAssetFolders || [];
           settingsData.value = wk.settingsData || {};
           settingsDirty.value = wk.settingsDirty || false;
           settingsSha.value = wk.settingsSha || null;
           stagedCarousels.value = new Map(wk.stagedCarousels || []);
         } else {
           customFolders.value = [];
+          customAssetFolders.value = [];
           stagedDeletions.value.clear();
           stagedFiles.value.clear();
           stagedCarousels.value.clear();
         }
       } catch {
         customFolders.value = [];
+        customAssetFolders.value = [];
         stagedDeletions.value.clear();
         stagedFiles.value.clear();
         stagedCarousels.value.clear();
@@ -257,6 +262,20 @@ export const useRepoStore = defineStore("repo", () => {
     const data = (await res.json()) as {
       tree: Array<{ path: string; type: string; sha: string; size?: number }>;
     };
+
+    const folderSet = new Set(customAssetFolders.value);
+    for (const item of data.tree) {
+      if (!item.path.startsWith(path + "/") || item.type !== "blob") continue;
+      const relativePath = item.path.replace(path + "/", "");
+      const parts = relativePath.split("/");
+      if (parts.length > 1) {
+        for (let i = 1; i < parts.length; i++) {
+          folderSet.add(parts.slice(0, i).join("/"));
+        }
+      }
+    }
+    customAssetFolders.value = [...folderSet].sort();
+
     const imageExts = /\.(png|jpe?g|gif|svg|webp|avif)$/i;
     assetTree.value = data.tree
       .filter((i) => i.path.startsWith(path + "/") && i.type === "blob" && imageExts.test(i.path))
@@ -351,6 +370,40 @@ export const useRepoStore = defineStore("repo", () => {
     });
     stagedFiles.value = new Map(stagedFiles.value);
     if (stagedDeletions.value.has(fullPath)) stagedDeletions.value.delete(fullPath);
+  }
+
+  function createAssetFolder(folderName: string) {
+    if (!config.value?.assets_path) return;
+
+    const sanitized = folderName
+      .split("/")
+      .map((part) => part.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, ""))
+      .filter(Boolean)
+      .join("/");
+
+    if (!sanitized) return;
+
+    if (!customAssetFolders.value.includes(sanitized)) {
+      customAssetFolders.value.push(sanitized);
+      customAssetFolders.value.sort();
+    }
+
+    const keepPath = `${config.value.assets_path}/${sanitized}/.gitkeep`;
+    if (!stagedFiles.value.has(keepPath)) {
+      const empty = b64encode("");
+      stagedFiles.value.set(keepPath, {
+        path: keepPath,
+        sha: null,
+        type: "asset",
+        content: empty,
+        originalContent: empty,
+        frontmatter: {},
+        originalFrontmatter: {},
+      });
+      stagedFiles.value = new Map(stagedFiles.value);
+    }
+
+    if (stagedDeletions.value.has(keepPath)) stagedDeletions.value.delete(keepPath);
   }
 
   function deleteAsset(path: string) {
@@ -861,7 +914,15 @@ export const useRepoStore = defineStore("repo", () => {
 
   // ─── Workspace Automatic Persistence ──────────────────────────────────────────
   watch(
-    [stagedFiles, stagedDeletions, customFolders, settingsData, settingsDirty, stagedCarousels],
+    [
+      stagedFiles,
+      stagedDeletions,
+      customFolders,
+      customAssetFolders,
+      settingsData,
+      settingsDirty,
+      stagedCarousels,
+    ],
     () => {
       if (!selectedRepo.value) return;
       const key = `liteditor_workspace_${selectedRepo.value.full_name}`;
@@ -871,6 +932,7 @@ export const useRepoStore = defineStore("repo", () => {
           stagedFiles: Array.from(stagedFiles.value.entries()),
           stagedDeletions: Array.from(stagedDeletions.value),
           customFolders: customFolders.value,
+          customAssetFolders: customAssetFolders.value,
           settingsData: settingsData.value,
           settingsDirty: settingsDirty.value,
           settingsSha: settingsSha.value,
@@ -891,6 +953,7 @@ export const useRepoStore = defineStore("repo", () => {
     fileTree,
     treeLoading,
     customFolders,
+    customAssetFolders,
     assetTree,
     stagedFiles,
     stagedDeletions,
@@ -922,6 +985,7 @@ export const useRepoStore = defineStore("repo", () => {
     openCarousel,
     updateCarouselData,
     updateCarouselMeta,
+    createAssetFolder,
     uploadAsset,
     deleteAsset,
     renameAsset,

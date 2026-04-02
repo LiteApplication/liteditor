@@ -62,6 +62,8 @@ export default {
     configError: 'Config error',
     carousels: 'Carousels',
     addImage: 'Add Image',
+    newAssetFolder: 'New asset folder',
+    newAssetFolderPrompt: 'New asset folder name (you can use / for nesting):',
   },
 
   // ─── Context menu ──────────────────────────────────────────────────────────

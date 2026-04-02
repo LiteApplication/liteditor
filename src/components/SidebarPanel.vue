@@ -221,6 +221,16 @@ const groupedAssets = computed(() => {
     groups[dir].push(node)
   }
 
+  for (const cf of repo.customAssetFolders) {
+    if (cf !== '/') {
+      const dirParts = cf.split('/')
+      for (let i = 1; i <= dirParts.length; i++) {
+        const ancestor = dirParts.slice(0, i).join('/')
+        if (!groups[ancestor]) groups[ancestor] = []
+      }
+    }
+  }
+
   const sorted: Array<{ group: string, nodes: typeof repo.assetTree, depth: number }> = []
   const keys = Object.keys(groups).sort()
 
@@ -324,6 +334,24 @@ function uploadNewImage() {
     reader.readAsDataURL(file)
   }
   input.click()
+}
+
+function createNewAssetFolder() {
+  const name = prompt(t('sidebar.newAssetFolderPrompt'))
+  if (!name) return
+  repo.createAssetFolder(name)
+  const sanitized = name
+    .split('/')
+    .map(part => part.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, ''))
+    .filter(Boolean)
+    .join('/')
+
+  if (!sanitized) return
+  const parts = sanitized.split('/')
+  for (let i = 1; i <= parts.length; i++) {
+    assetExpandedFolders.value.add(parts.slice(0, i).join('/'))
+  }
+  ui.assetsOpen = true
 }
 
 const assetCtxMenu = ref({ show: false, x: 0, y: 0, path: '', name: '' })
@@ -554,6 +582,15 @@ function ctxDeleteAsset() {
               <svg class="w-4 h-4" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'" fill="none"
                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <button @click="createNewAssetFolder"
+              class="opacity-0 group-hover:opacity-100 p-0.5 rounded-md transition-all duration-150 hover:bg-surface-200 dark:hover:bg-surface-700 hover:scale-110 active:scale-90"
+              :title="t('sidebar.newAssetFolder')">
+              <svg class="w-4 h-4" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1m-6 4h.01M6 20h12a2 2 0 002-2V9a2 2 0 00-2-2h-12a2 2 0 00-2 2v9a2 2 0 002 2z" />
               </svg>
             </button>
           </div>
