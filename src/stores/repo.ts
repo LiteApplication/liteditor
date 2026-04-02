@@ -34,6 +34,7 @@ export interface GitHubRepo {
   default_branch: string;
   private: boolean;
   description: string | null;
+  pushed_at?: string;
 }
 
 export interface TreeNode {
@@ -65,6 +66,7 @@ export interface StagedCarousel {
 // Store
 export const useRepoStore = defineStore("repo", () => {
   const auth = useAuthStore();
+  const LAST_REPO_STORAGE_KEY = "liteditor_last_repo";
 
   const repos = ref<GitHubRepo[]>([]);
   const reposLoading = ref(false);
@@ -114,11 +116,44 @@ export const useRepoStore = defineStore("repo", () => {
   async function fetchRepos() {
     reposLoading.value = true;
     try {
-      const res = await auth.githubFetch(
+      const allRepos: GitHubRepo[] = [];
+
+      // Fetch personal repos (owned or collaborator)
+      const personalRes = await auth.githubFetch(
         "/user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator",
       );
-      if (!res.ok) throw new Error("Failed to fetch repos");
-      repos.value = (await res.json()) as GitHubRepo[];
+      if (!personalRes.ok) throw new Error("Failed to fetch personal repos");
+      allRepos.push(...((await personalRes.json()) as GitHubRepo[]));
+
+      // Fetch organization repos (using cached orgs from auth store)
+      for (const org of auth.userOrgs) {
+        const orgReposRes = await auth.githubFetch(
+          `/orgs/${org.login}/repos?per_page=100&sort=pushed`,
+        );
+        if (orgReposRes.ok) {
+          allRepos.push(...((await orgReposRes.json()) as GitHubRepo[]));
+        }
+      }
+
+      // Remove duplicates and sort by pushed date
+      const uniqueRepos = Array.from(
+        new Map(allRepos.map((repo) => [repo.id, repo])).values(),
+      ).sort((a, b) => {
+        const aDate = new Date(a.pushed_at || 0).getTime();
+        const bDate = new Date(b.pushed_at || 0).getTime();
+        return bDate - aDate;
+      });
+
+      const lastRepoFullName = localStorage.getItem(LAST_REPO_STORAGE_KEY);
+      if (lastRepoFullName) {
+        const lastRepoIndex = uniqueRepos.findIndex((repo) => repo.full_name === lastRepoFullName);
+        if (lastRepoIndex > 0) {
+          const [lastRepo] = uniqueRepos.splice(lastRepoIndex, 1);
+          if (lastRepo) uniqueRepos.unshift(lastRepo);
+        }
+      }
+
+      repos.value = uniqueRepos;
     } finally {
       reposLoading.value = false;
     }
@@ -126,6 +161,7 @@ export const useRepoStore = defineStore("repo", () => {
 
   async function selectRepo(repo: GitHubRepo) {
     selectedRepo.value = repo;
+    localStorage.setItem(LAST_REPO_STORAGE_KEY, repo.full_name);
     config.value = null;
     configError.value = null;
     fileTree.value = [];
