@@ -45,6 +45,11 @@ export default {
   editor: {
     unsavedChanges: "Modifications non sauvegardées",
     publish: "Publier",
+    discardChangesTitle: "Supprimer les modifications non publiées ?",
+    discardChangesMessage: "Cet onglet contient des modifications non publiées.",
+    discardChangesHint: "Si vous le fermez maintenant, ces changements seront perdus.",
+    publishKeepChanges: "Publier les modifications",
+    discardChanges: "Supprimer et fermer",
   },
 
   // Sidebar

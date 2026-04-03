@@ -26,6 +26,8 @@ const ui = useUIStore()
 const showFrontmatter = ref(true)
 const showLinkModal = ref(false)
 const showImageModal = ref(false)
+const showDiscardModal = ref(false)
+const pendingClosePath = ref<string | null>(null)
 const linkUrl = ref('')
 const imageCaption = ref('')
 const pickedAssetPath = ref<string>('')
@@ -157,6 +159,28 @@ const isDirty = (path: string) => {
   return f.content !== f.originalContent ||
     JSON.stringify(f.frontmatter) !== JSON.stringify(f.originalFrontmatter)
 }
+
+function requestCloseFile(path: string) {
+  if (isDirty(path)) {
+    pendingClosePath.value = path
+    showDiscardModal.value = true
+    return
+  }
+  repo.closeFile(path)
+}
+
+function discardPendingChanges() {
+  if (!pendingClosePath.value) return
+  repo.closeFile(pendingClosePath.value)
+  pendingClosePath.value = null
+  showDiscardModal.value = false
+}
+
+function publishPendingChanges() {
+  pendingClosePath.value = null
+  showDiscardModal.value = false
+  ui.commitDrawerOpen = true
+}
 </script>
 
 <template>
@@ -175,7 +199,7 @@ const isDirty = (path: string) => {
         <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-200"
           :class="isDirty(path) ? 'bg-brand-400' : 'bg-transparent'"></span>
         <span class="max-w-32 truncate">{{ file.path.split('/').pop() }}</span>
-        <span role="button" @click.stop="repo.closeFile(path)"
+        <span role="button" @click.stop="requestCloseFile(path)"
           class="opacity-0 group-hover:opacity-100 w-3.5 h-3.5 rounded flex items-center justify-center transition-all duration-100 cursor-pointer hover:bg-surface-700/50 hover:scale-110 active:scale-90">
           <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -183,6 +207,47 @@ const isDirty = (path: string) => {
         </span>
       </button>
     </div>
+    
+        <Teleport to="body">
+          <div v-if="showDiscardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            @click.self="showDiscardModal = false">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showDiscardModal = false"></div>
+            <div class="relative z-50 w-full max-w-md rounded-2xl border overflow-hidden"
+              :class="ui.darkMode ? 'bg-surface-900 border-surface-700 shadow-2xl' : 'bg-white border-surface-200 shadow-2xl'">
+              <div class="px-5 py-4 border-b" :class="ui.darkMode ? 'border-surface-700' : 'border-surface-200'">
+                <h3 class="text-base font-semibold">{{ t('editor.discardChangesTitle') }}</h3>
+                <p class="mt-1 text-sm" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-600'">
+                  {{ t('editor.discardChangesMessage') }}
+                </p>
+              </div>
+    
+              <div class="px-5 py-4 space-y-2">
+                <p class="text-sm" :class="ui.darkMode ? 'text-surface-300' : 'text-surface-700'">
+                  {{ t('editor.discardChangesHint') }}
+                </p>
+              </div>
+    
+              <div class="flex items-center justify-end gap-2 px-5 py-4 border-t"
+                :class="ui.darkMode ? 'border-surface-700' : 'border-surface-200'">
+                <button type="button" @click="showDiscardModal = false"
+                  class="px-4 py-2 rounded-lg text-sm border transition-all duration-150 cursor-pointer"
+                  :class="ui.darkMode ? 'border-surface-700 text-surface-300 hover:bg-surface-800' : 'border-surface-200 text-surface-700 hover:bg-surface-50'">
+                  {{ t('cancel') }}
+                </button>
+                <button type="button" @click="publishPendingChanges"
+                  class="px-4 py-2 rounded-lg text-sm border transition-all duration-150 cursor-pointer"
+                  :class="ui.darkMode ? 'border-brand-500/40 bg-brand-500/10 text-brand-300 hover:bg-brand-500/20' : 'border-brand-500/30 bg-brand-50 text-brand-700 hover:bg-brand-100'">
+                  {{ t('editor.publishKeepChanges') }}
+                </button>
+                <button type="button" @click="discardPendingChanges"
+                  class="px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 cursor-pointer"
+                  :class="ui.darkMode ? 'border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20' : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'">
+                  {{ t('editor.discardChanges') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
 
     <!-- Empty state -->
     <div v-if="!repo.activeFile" class="flex-1 flex flex-col items-center justify-center gap-3"

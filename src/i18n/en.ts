@@ -45,6 +45,11 @@ export default {
   editor: {
     unsavedChanges: "Unsaved changes",
     publish: "Publish",
+    discardChangesTitle: "Discard unsaved changes?",
+    discardChangesMessage: "This tab has unpublished changes.",
+    discardChangesHint: "If you close it now, those changes will be lost.",
+    publishKeepChanges: "Publish changes",
+    discardChanges: "Discard and close",
   },
 
   // Sidebar
