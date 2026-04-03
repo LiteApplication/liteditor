@@ -171,6 +171,7 @@ export default {
   field: {
     selectOption: "Select…",
     addItem: "Add item",
+    objectSection: "Additional fields",
     maxReached: "Maximum {max} items reached",
   },
 };

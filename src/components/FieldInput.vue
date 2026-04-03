@@ -52,6 +52,11 @@ const objectSummary = computed(() => {
   return `${total} field${total > 1 ? 's' : ''}`
 })
 
+const objectSectionTitle = computed(() => {
+  const label = props.schema.label?.trim()
+  return label || t('field.objectSection')
+})
+
 // List helpers
 const listItems = computed(() => Array.isArray(props.modelValue) ? props.modelValue as unknown[] : [])
 const canAddItem = computed(() => {
@@ -350,7 +355,7 @@ function onAlphaChange(pct: number) {
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
         <span class="text-xs font-semibold" :class="ui.darkMode ? 'text-surface-200' : 'text-surface-700'">
-          Object section
+          {{ objectSectionTitle }}
         </span>
         <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full"
           :class="ui.darkMode ? 'bg-surface-700 text-surface-400' : 'bg-surface-200 text-surface-500'">

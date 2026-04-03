@@ -171,6 +171,7 @@ export default {
   field: {
     selectOption: "Choisir…",
     addItem: "Ajouter un élément",
+    objectSection: "Champs supplémentaires",
     maxReached: "Maximum {max} éléments atteint",
   },
 };
