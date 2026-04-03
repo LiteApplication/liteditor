@@ -24,7 +24,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isAuthenticated = computed(() => !!accessToken.value);
 
-  // ── Step 1: redirect to GitHub ──────────────────────────────────────────────
+  // Step 1: redirect to GitHub
   function startOAuth() {
     const state = generateState();
     sessionStorage.setItem("oauth_state", state);
@@ -38,7 +38,7 @@ export const useAuthStore = defineStore("auth", () => {
     window.location.href = `https://github.com/login/oauth/authorize?${params}`;
   }
 
-  // ── Step 2: handle callback, exchange code via Gatekeeper ──────────────────
+  // Step 2: handle callback, exchange code via Gatekeeper
   async function handleCallback(code: string, state: string): Promise<boolean> {
     const savedState = sessionStorage.getItem("oauth_state");
 
@@ -77,7 +77,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  // ── Fetch GitHub user profile ───────────────────────────────────────────────
+  // Fetch GitHub user profile
   async function fetchUser() {
     if (!accessToken.value) return;
     const res = await githubFetch("/user");
@@ -96,7 +96,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  // ── Logout ──────────────────────────────────────────────────────────────────
+  // Logout
   function logout() {
     accessToken.value = null;
     user.value = null;
@@ -104,7 +104,7 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.removeItem("liteditor_user");
   }
 
-  // ── Authenticated GitHub API fetch ──────────────────────────────────────────
+  // Authenticated GitHub API fetch
   function githubFetch(path: string, options: RequestInit = {}) {
     const url = path.startsWith("http") ? path : `https://api.github.com${path}`;
     return fetch(url, {

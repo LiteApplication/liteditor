@@ -86,11 +86,11 @@ export const useRepoStore = defineStore("repo", () => {
   const settingsSha = ref<string | null>(null);
   const settingsDirty = ref(false);
 
-  // ─── Carousel state ──────────────────────────────────────────────────────────
+  // Carousel state
   const stagedCarousels = ref<Map<string, StagedCarousel>>(new Map());
   const activeCarouselKey = ref<string | null>(null);
 
-  // ─── GitHub Actions state ────────────────────────────────────────────────────
+  // GitHub Actions state
   const githubActionStatus = ref<"success" | "failure" | "in_progress" | null>(null);
 
   const hasStagedChanges = computed(() => {
@@ -112,6 +112,51 @@ export const useRepoStore = defineStore("repo", () => {
   const activeCarousel = computed(() =>
     activeCarouselKey.value ? (stagedCarousels.value.get(activeCarouselKey.value) ?? null) : null,
   );
+
+  type FieldType =
+    | "short-text"
+    | "long-text"
+    | "boolean"
+    | "image"
+    | "link"
+    | "color"
+    | "selection"
+    | "list"
+    | "object";
+
+  const defaultFieldValueFactories: Record<FieldType, (field: FieldSchema) => unknown> = {
+    "short-text": () => "",
+    "long-text": () => "",
+    boolean: () => false,
+    image: () => "",
+    link: () => "",
+    color: () => "#000000",
+    selection: (field) =>
+      (field as Extract<FieldSchema, { type: "selection" }>).options[0]?.value ?? "",
+    list: () => [],
+    object: (field) => {
+      const objectField = field as Extract<FieldSchema, { type: "object" }>;
+      return Object.fromEntries(
+        Object.entries(objectField.fields).map(([key, childField]) => [
+          key,
+          getDefaultFieldValue(childField as FieldSchema),
+        ]),
+      );
+    },
+  };
+
+  function getDefaultFieldValue(field: FieldSchema): unknown {
+    const fieldType: FieldType = field.type ?? "short-text";
+    const factory = defaultFieldValueFactories[fieldType];
+    return factory(field);
+  }
+
+  function createDefaultFrontmatter(): Record<string, unknown> {
+    const schema = config.value?.frontmatter ?? {};
+    return Object.fromEntries(
+      Object.entries(schema).map(([key, field]) => [key, getDefaultFieldValue(field)]),
+    );
+  }
 
   async function fetchRepos() {
     reposLoading.value = true;
@@ -368,6 +413,7 @@ export const useRepoStore = defineStore("repo", () => {
     }
 
     const newNode: TreeNode = { path: fullPath, name: sanitizedName, type: "file" };
+    const defaultFrontmatter = createDefaultFrontmatter();
     fileTree.value.push(newNode);
     stagedFiles.value.set(fullPath, {
       path: fullPath,
@@ -375,8 +421,11 @@ export const useRepoStore = defineStore("repo", () => {
       type: "markdown",
       content: "",
       originalContent: "",
-      frontmatter: {},
-      originalFrontmatter: {},
+      frontmatter: defaultFrontmatter,
+      originalFrontmatter: JSON.parse(JSON.stringify(defaultFrontmatter)) as Record<
+        string,
+        unknown
+      >,
     });
     stagedFiles.value = new Map(stagedFiles.value);
     if (stagedDeletions.value.has(fullPath)) stagedDeletions.value.delete(fullPath);
@@ -384,7 +433,7 @@ export const useRepoStore = defineStore("repo", () => {
     activeCarouselKey.value = null;
   }
 
-  // ─── Asset Operations ────────────────────────────────────────────────────────
+  // Asset Operations
   function uploadAsset(fileName: string, base64Data: string) {
     if (!selectedRepo.value || !config.value?.assets_path) return;
     const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-_]+/g, "-");
@@ -556,7 +605,7 @@ export const useRepoStore = defineStore("repo", () => {
     await moveAsset(oldPath, newPath);
   }
 
-  // ─── OS-like Operations ───────────────────────────────────────────────────────
+  // OS-like Operations
   function deleteItem(path: string, isFolder: boolean) {
     if (isFolder) {
       const files = fileTree.value.filter((f) => f.path.startsWith(path + "/"));
@@ -767,7 +816,7 @@ export const useRepoStore = defineStore("repo", () => {
     settingsDirty.value = true;
   }
 
-  // ─── Carousel operations ──────────────────────────────────────────────────────
+  // Carousel operations
   async function openCarousel(key: string) {
     if (!selectedRepo.value || !config.value) return;
     activeCarouselKey.value = key;
@@ -953,7 +1002,7 @@ export const useRepoStore = defineStore("repo", () => {
     stagedCarousels.value = new Map(stagedCarousels.value);
   }
 
-  // ─── Workspace Automatic Persistence ──────────────────────────────────────────
+  // Workspace Automatic Persistence
   watch(
     [
       stagedFiles,

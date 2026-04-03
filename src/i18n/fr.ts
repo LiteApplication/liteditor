@@ -1,5 +1,5 @@
 export default {
-  // ─── General / shared ──────────────────────────────────────────────────────
+  // General / shared
   yes: "Oui",
   no: "Non",
   cancel: "Annuler",
@@ -17,7 +17,7 @@ export default {
   darkMode: "Mode sombre",
   signOut: "Se déconnecter",
 
-  // ─── Auth / Login ──────────────────────────────────────────────────────────
+  // Auth / Login
   login: {
     title: "LiteEditor",
     subtitle: "Un CMS léger pour vos dépôts GitHub",
@@ -27,7 +27,7 @@ export default {
     desc: "Connectez votre compte GitHub pour commencer à éditer votre contenu directement depuis votre dépôt.",
   },
 
-  // ─── Repo selection ────────────────────────────────────────────────────────
+  // Repo selection
   repos: {
     title: "Sélectionnez un site",
     subtitle: "Choisissez le site que vous souhaitez éditer",
@@ -41,13 +41,13 @@ export default {
     errorContactAdmin: "Veuillez contacter votre administrateur.",
   },
 
-  // ─── Editor header ─────────────────────────────────────────────────────────
+  // Editor header
   editor: {
     unsavedChanges: "Modifications non sauvegardées",
     publish: "Publier",
   },
 
-  // ─── Sidebar ───────────────────────────────────────────────────────────────
+  // Sidebar
   sidebar: {
     content: "Contenu",
     assets: "Médias",
@@ -66,7 +66,7 @@ export default {
     newAssetFolderPrompt: "Nom du nouveau dossier média (vous pouvez utiliser / pour imbriquer) :",
   },
 
-  // ─── Context menu ──────────────────────────────────────────────────────────
+  // Context menu
   ctx: {
     rename: "Renommer",
     duplicate: "Dupliquer",
@@ -75,7 +75,7 @@ export default {
     deleteConfirm: "Êtes-vous sûr de vouloir supprimer {path} ?",
   },
 
-  // ─── Toolbar ───────────────────────────────────────────────────────────────
+  // Toolbar
   toolbar: {
     bold: "Gras (Ctrl+B)",
     italic: "Italique (Ctrl+I)",
@@ -95,7 +95,7 @@ export default {
     heading3: "Titre 3",
   },
 
-  // ─── Link modal ────────────────────────────────────────────────────────────
+  // Link modal
   link: {
     title: "Insérer un lien",
     placeholder: "https://exemple.com",
@@ -104,7 +104,7 @@ export default {
     noPages: "Aucune page trouvée.",
   },
 
-  // ─── Image modal ───────────────────────────────────────────────────────────
+  // Image modal
   image: {
     title: "Insérer une image",
     captionPlaceholder: "Légende (facultatif)",
@@ -114,13 +114,13 @@ export default {
     change: "Changer l'image",
   },
 
-  // ─── Frontmatter panel ────────────────────────────────────────────────────
+  // Frontmatter panel
   frontmatter: {
     title: "Détails du document",
     noDetails: "Ce fichier n'a pas de détails de document",
   },
 
-  // ─── Settings panel ───────────────────────────────────────────────────────
+  // Settings panel
   settings: {
     title: "Paramètres généraux",
     editing: "Édition de",
@@ -130,7 +130,7 @@ export default {
     unsavedToSave: "pour sauvegarder",
   },
 
-  // ─── Commit drawer ────────────────────────────────────────────────────────
+  // Commit drawer
   commit: {
     title: "Réviser & Publier",
     filesWillBePublished: "{n} fichier sera publié | {n} fichiers seront publiés",
@@ -143,12 +143,12 @@ export default {
     statusDeleted: "supprimé",
   },
 
-  // ─── Empty workspace ──────────────────────────────────────────────────────
+  // Empty workspace
   workspace: {
     selectFile: "Sélectionnez un fichier à éditer",
   },
 
-  // ─── Carousel editor ──────────────────────────────────────────────────────
+  // Carousel editor
   carousel: {
     title: "Éditeur de carrousel",
     noCarousels: "Aucun carrousel configuré dans .liteditor",
@@ -167,7 +167,7 @@ export default {
     empty: "Aucune diapositive pour l'instant. Ajoutez-en une !",
   },
 
-  // ─── Field inputs ─────────────────────────────────────────────────────────
+  // Field inputs
   field: {
     selectOption: "Choisir…",
     addItem: "Ajouter un élément",

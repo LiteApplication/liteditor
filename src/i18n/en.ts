@@ -1,5 +1,5 @@
 export default {
-  // ─── General / shared ──────────────────────────────────────────────────────
+  // General / shared
   yes: "Yes",
   no: "No",
   cancel: "Cancel",
@@ -17,7 +17,7 @@ export default {
   darkMode: "Dark mode",
   signOut: "Sign out",
 
-  // ─── Auth / Login ──────────────────────────────────────────────────────────
+  // Auth / Login
   login: {
     title: "LiteEditor",
     subtitle: "A lightweight CMS for GitHub repositories",
@@ -27,7 +27,7 @@ export default {
     desc: "Connect your GitHub account to start editing your content directly from your repository.",
   },
 
-  // ─── Repo selection ────────────────────────────────────────────────────────
+  // Repo selection
   repos: {
     title: "Select a repository",
     subtitle: "Choose the repository you want to edit",
@@ -41,13 +41,13 @@ export default {
     errorContactAdmin: "Please contact your administrator.",
   },
 
-  // ─── Editor header ─────────────────────────────────────────────────────────
+  // Editor header
   editor: {
     unsavedChanges: "Unsaved changes",
     publish: "Publish",
   },
 
-  // ─── Sidebar ───────────────────────────────────────────────────────────────
+  // Sidebar
   sidebar: {
     content: "Content",
     assets: "Assets",
@@ -66,7 +66,7 @@ export default {
     newAssetFolderPrompt: "New asset folder name (you can use / for nesting):",
   },
 
-  // ─── Context menu ──────────────────────────────────────────────────────────
+  // Context menu
   ctx: {
     rename: "Rename",
     duplicate: "Duplicate",
@@ -75,7 +75,7 @@ export default {
     deleteConfirm: "Are you sure you want to delete {path}?",
   },
 
-  // ─── Toolbar ───────────────────────────────────────────────────────────────
+  // Toolbar
   toolbar: {
     bold: "Bold (Ctrl+B)",
     italic: "Italic (Ctrl+I)",
@@ -95,7 +95,7 @@ export default {
     heading3: "Heading 3",
   },
 
-  // ─── Link modal ────────────────────────────────────────────────────────────
+  // Link modal
   link: {
     title: "Insert link",
     placeholder: "https://example.com",
@@ -104,7 +104,7 @@ export default {
     noPages: "No pages found.",
   },
 
-  // ─── Image modal ───────────────────────────────────────────────────────────
+  // Image modal
   image: {
     title: "Insert image",
     captionPlaceholder: "Caption (optional)",
@@ -114,13 +114,13 @@ export default {
     change: "Change image",
   },
 
-  // ─── Frontmatter panel ────────────────────────────────────────────────────
+  // Frontmatter panel
   frontmatter: {
     title: "Document details",
     noDetails: "This file has no document details",
   },
 
-  // ─── Settings panel ───────────────────────────────────────────────────────
+  // Settings panel
   settings: {
     title: "General Settings",
     editing: "Editing",
@@ -130,7 +130,7 @@ export default {
     unsavedToSave: "to save",
   },
 
-  // ─── Commit drawer ────────────────────────────────────────────────────────
+  // Commit drawer
   commit: {
     title: "Review & Publish",
     filesWillBePublished: "{n} file will be published | {n} files will be published",
@@ -143,12 +143,12 @@ export default {
     statusDeleted: "deleted",
   },
 
-  // ─── Empty workspace ──────────────────────────────────────────────────────
+  // Empty workspace
   workspace: {
     selectFile: "Select a file to edit",
   },
 
-  // ─── Carousel editor ──────────────────────────────────────────────────────
+  // Carousel editor
   carousel: {
     title: "Carousel editor",
     noCarousels: "No carousels configured in .liteditor",
@@ -167,7 +167,7 @@ export default {
     empty: "No slides yet. Add one!",
   },
 
-  // ─── Field inputs ─────────────────────────────────────────────────────────
+  // Field inputs
   field: {
     selectOption: "Select…",
     addItem: "Add item",
