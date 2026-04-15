@@ -151,6 +151,12 @@ export default {
   // Empty workspace
   workspace: {
     selectFile: "Select a file to edit",
+    availableArticles: "Available articles",
+    createArticle: "Create a new article",
+    createArticleHint: "Start from a fresh page and fill in the content fields.",
+    createArticleAction: "Create article",
+    openArticle: "Open article",
+    newArticlePrompt: "New article name (will be converted to lowercase-with-dashes.md):",
   },
 
   // Carousel editor

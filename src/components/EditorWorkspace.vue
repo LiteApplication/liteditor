@@ -33,6 +33,11 @@ const imageCaption = ref('')
 const pickedAssetPath = ref<string>('')
 
 const hasFrontmatterSchema = computed(() => Object.keys(repo.config?.frontmatter ?? {}).length > 0)
+const availableArticles = computed(() =>
+  [...repo.fileTree]
+    .filter((file) => file.path.endsWith('.md'))
+    .sort((a, b) => a.name.localeCompare(b.name)),
+)
 
 // Custom Image extension that uses the GitHubImageView node renderer
 const GitHubImage = Image.extend({
@@ -181,6 +186,21 @@ function publishPendingChanges() {
   showDiscardModal.value = false
   ui.commitDrawerOpen = true
 }
+
+function openArticle(nodePath: string) {
+  const node = repo.fileTree.find((file) => file.path === nodePath)
+  if (!node) return
+  void repo.openFile(node)
+  ui.settingsOpen = false
+}
+
+function createArticle() {
+  const contentPath = repo.config?.content_path ?? ''
+  const name = prompt(t('workspace.newArticlePrompt'))
+  if (!name) return
+  repo.createFile(contentPath, name)
+  ui.settingsOpen = false
+}
 </script>
 
 <template>
@@ -250,13 +270,83 @@ function publishPendingChanges() {
         </Teleport>
 
     <!-- Empty state -->
-    <div v-if="!repo.activeFile" class="flex-1 flex flex-col items-center justify-center gap-3"
-      :class="ui.darkMode ? 'text-surface-700' : 'text-surface-300'">
-      <svg class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      <p class="text-sm font-medium">{{ t('workspace.selectFile') }}</p>
+    <div v-if="!repo.activeFile" class="flex-1 flex items-center justify-center px-6 py-10"
+      :class="ui.darkMode ? 'bg-surface-950' : 'bg-surface-100'">
+      <div class="w-full max-w-6xl">
+        <div class="flex items-end justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-semibold" :class="ui.darkMode ? 'text-white' : 'text-surface-900'">
+              {{ t('workspace.availableArticles') }}
+            </h2>
+            <p class="mt-1 text-sm" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'">
+              {{ t('workspace.selectFile') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <button type="button" @click="createArticle"
+            class="group min-h-36 rounded-2xl border-2 border-dashed p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col justify-between"
+            :class="ui.darkMode ? 'border-surface-700 bg-surface-900/40 hover:border-brand-500 hover:bg-surface-900' : 'border-surface-300 bg-white hover:border-brand-400 hover:bg-brand-50'">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl mb-3"
+                  :class="ui.darkMode ? 'bg-brand-500/15 text-brand-300' : 'bg-brand-50 text-brand-600'">
+                  <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold" :class="ui.darkMode ? 'text-white' : 'text-surface-900'">
+                  {{ t('workspace.createArticle') }}
+                </h3>
+                <p class="mt-1 text-sm" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'">
+                  {{ t('workspace.createArticleHint') }}
+                </p>
+              </div>
+            </div>
+            <span class="mt-4 inline-flex items-center gap-2 text-sm font-medium"
+              :class="ui.darkMode ? 'text-brand-300' : 'text-brand-600'">
+              <span>{{ t('workspace.createArticleAction') }}</span>
+              <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 12h14" />
+              </svg>
+            </span>
+          </button>
+
+          <button v-for="article in availableArticles" :key="article.path" type="button"
+            @click="openArticle(article.path)"
+            class="group min-h-36 rounded-2xl border p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col justify-between"
+            :class="ui.darkMode ? 'border-surface-800 bg-surface-900/70 hover:border-surface-600' : 'border-surface-200 bg-white hover:border-surface-300'">
+            <div>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="truncate text-lg font-semibold" :class="ui.darkMode ? 'text-white' : 'text-surface-900'">
+                    {{ article.name }}
+                  </h3>
+                  <p class="mt-1 text-xs truncate" :class="ui.darkMode ? 'text-surface-500' : 'text-surface-500'">
+                    {{ article.path }}
+                  </p>
+                </div>
+                <span v-if="repo.activeFilePath === article.path"
+                  class="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-brand-400"></span>
+              </div>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between gap-3">
+              <span class="text-xs rounded-full px-2.5 py-1"
+                :class="ui.darkMode ? 'bg-surface-800 text-surface-400' : 'bg-surface-100 text-surface-500'">
+                {{ t('workspace.openArticle') }}
+              </span>
+              <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                :class="ui.darkMode ? 'text-surface-500' : 'text-surface-400'" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 12h14" />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Editor + Frontmatter -->

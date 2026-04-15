@@ -151,6 +151,12 @@ export default {
   // Empty workspace
   workspace: {
     selectFile: "Sélectionnez un fichier à éditer",
+    availableArticles: "Articles disponibles",
+    createArticle: "Créer un nouvel article",
+    createArticleHint: "Commencez par une page vide et complétez les champs de contenu.",
+    createArticleAction: "Créer l'article",
+    openArticle: "Ouvrir l'article",
+    newArticlePrompt: "Nom du nouvel article (sera converti en minuscules-avec-tirets.md) :",
   },
 
   // Carousel editor
