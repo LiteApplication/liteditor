@@ -374,7 +374,7 @@ export const useRepoStore = defineStore("repo", () => {
     const { owner, name, default_branch } = selectedRepo.value;
     try {
       const res = await auth.githubFetch(
-        `/repos/${owner.login}/${name}/actions/runs?branch=${default_branch}&per_page=1`,
+        `/repos/${owner.login}/${name}/actions/runs?branch=${default_branch}&per_page=1&exclude_pull_requests=true`,
       );
       if (!res.ok) return;
       const data = (await res.json()) as {
