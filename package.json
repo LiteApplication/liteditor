@@ -38,10 +38,10 @@
     "@tiptap/starter-kit": "^3.21.0",
     "@tiptap/vue-3": "^3.21.0",
     "@types/js-yaml": "^4.0.9",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^5.5.0",
     "markdown-it-footnote": "^4.0.0",
-    "marked": "^17.0.5",
-    "pinia": "^3.0.4",
+    "marked": "^18.2.0",
+    "pinia": "^4.1.0",
     "tailwindcss": "^4.2.2",
     "tiptap-markdown": "^0.9.0",
     "vue": "^3.5.30",
@@ -51,24 +51,27 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
-    "@types/node": "^24.12.0",
+    "@types/node": "^24.19.2",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/tsconfig": "^0.9.0",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-oxlint": "~1.51.0",
-    "eslint-plugin-vue": "~10.8.0",
+    "eslint-plugin-oxlint": "^1.93.0",
+    "eslint-plugin-vue": "^10.12.1",
     "jiti": "^2.6.1",
-    "npm-run-all2": "^8.0.4",
-    "oxfmt": "^0.37.0",
-    "oxlint": "~1.51.0",
+    "npm-run-all2": "^9.0.4",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
     "typescript": "~5.9.3",
-    "vite": "^7.3.1",
+    "vite": "^8.3.8",
     "vite-plugin-vue-devtools": "^8.0.7",
     "vue-tsc": "^3.2.5"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
+  },
+  "overrides": {
+    "minimatch": "^11.0.8"
   }
 }
