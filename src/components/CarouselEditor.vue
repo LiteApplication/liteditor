@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { useRepoStore, type CarouselSlide } from '@/stores/repo'
 import { useUIStore } from '@/stores/ui'
 import { useGitHubImage } from '@/composables/useGitHubImage'
-import { computeRelativePath } from '@/utils/paths'
 import FieldInput from './FieldInput.vue'
 import AssetPickerModal from './AssetPickerModal.vue'
 

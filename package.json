@@ -15,6 +15,7 @@
     "format": "oxfmt src/",
     "schema:check": "node scripts/check-schema.ts",
     "schema:test": "node --test scripts/schema-compat.test.ts",
+    "test": "node --test scripts/schema-compat.test.ts scripts/elements.test.ts",
     "release": "node scripts/release.ts"
   },
   "dependencies": {

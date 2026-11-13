@@ -201,3 +201,36 @@ Un fichier `.liteditor` valide pour une version publiée doit rester valide pour
 - `npm run release -- <patch|minor|major|x.y.z> [--dry-run]` exige un arbre git propre, refuse la release si le schéma est incompatible, incrémente la version, écrit l'instantané, crée le commit `release vX.Y.Z` et le tag annoté `vX.Y.Z`. Rien n'est poussé : lancez ensuite `git push && git push origin vX.Y.Z`.
 
 Ne modifiez jamais un fichier de `_history/` existant.
+
+## Éléments personnalisés
+
+Un dépôt peut déclarer des blocs réutilisables, insérables dans les pages (carrousels, encarts…) via la clé optionnelle `elements` de `.liteditor` :
+
+```json
+"elements": {
+  "slider": {
+    "label": "Slider",
+    "fields": {
+      "heading": { "type": "short-text", "label": "Titre" },
+      "text": { "type": "long-text", "label": "Description" },
+      "pics": { "type": "list", "itemSchema": { "type": "image" } }
+    },
+    "display": { "title": "heading", "description": "text", "images": "pics" }
+  }
+}
+```
+
+- `fields` : mêmes types de champs que `schema` / `frontmatter`.
+- `display` (tout est optionnel) : champ utilisé comme titre / description (texte) et comme images (`image` ou liste d'`image`). Sans `display`, l'éditeur affiche le `label` de l'élément.
+- Dans le Markdown, une instance est un bloc de code clôturé dont l'info est `liteditor-element:<clé>` et dont le contenu est du YAML :
+
+````
+```liteditor-element:slider
+heading: Soldes
+text: Jusqu'à -50 %
+pics:
+  - ../assets/a.jpg
+```
+````
+
+Le rendu côté site est à la charge du dépôt : son build doit transformer ces blocs (par ex. via un plugin remark/markdown-it) en HTML.

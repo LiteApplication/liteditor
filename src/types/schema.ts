@@ -63,6 +63,49 @@ export const CarouselConfigSchema = z.object({
 
 export type CarouselConfig = z.infer<typeof CarouselConfigSchema>
 
+const TEXT_TYPES = ['short-text', 'long-text', 'link']
+
+function isImageField(f: FieldSchema): boolean {
+  return f.type === 'image' || (f.type === 'list' && f.itemSchema.type === 'image')
+}
+
+export const ElementConfigSchema = z
+  .object({
+    label: z.string(),
+    description: z.string().optional(),
+    fields: z.record(z.string(), FieldSchemaSchema),
+    display: z
+      .object({
+        title: z.string().optional(),
+        description: z.string().optional(),
+        images: z.string().optional(),
+      })
+      .optional(),
+  })
+  .refine(
+    (el) => {
+      const d = el.display
+      if (!d) return true
+      for (const key of ['title', 'description'] as const) {
+        const name = d[key]
+        if (name === undefined) continue
+        const f = el.fields[name]
+        if (!f || !TEXT_TYPES.includes(f.type ?? 'short-text')) return false
+      }
+      if (d.images !== undefined) {
+        const f = el.fields[d.images]
+        if (!f || !isImageField(f)) return false
+      }
+      return true
+    },
+    {
+      message:
+        'display.title/description must name a text field and display.images an image (or list of image) field of the element',
+    },
+  )
+
+export type ElementConfig = z.infer<typeof ElementConfigSchema>
+
 export const LiteEditorConfigSchema = z.object({
   content_path: z.string(),
   assets_path: z.string(),
@@ -70,6 +113,7 @@ export const LiteEditorConfigSchema = z.object({
   schema: z.record(z.string(), FieldSchemaSchema).optional(),
   frontmatter: z.record(z.string(), FieldSchemaSchema).optional(),
   carousels: z.record(z.string(), CarouselConfigSchema).optional(),
+  elements: z.record(z.string(), ElementConfigSchema).optional(),
 })
 
 export type LiteEditorConfig = z.infer<typeof LiteEditorConfigSchema>

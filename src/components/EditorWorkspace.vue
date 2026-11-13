@@ -18,6 +18,7 @@ import { useUIStore } from '@/stores/ui'
 import FrontmatterPanel from './FrontmatterPanel.vue'
 import AssetPickerModal from './AssetPickerModal.vue'
 import GitHubImageView from './GitHubImageView.vue'
+import { ElementNode } from './elementExtension'
 
 const { t } = useI18n()
 const repo = useRepoStore()
@@ -33,6 +34,11 @@ const imageCaption = ref('')
 const pickedAssetPath = ref<string>('')
 
 const hasFrontmatterSchema = computed(() => Object.keys(repo.config?.frontmatter ?? {}).length > 0)
+const elementEntries = computed(() => Object.entries(repo.config?.elements ?? {}))
+function insertElement(name: string) {
+  if (!name) return
+  editor.value?.chain().focus().insertContent({ type: 'liteElement', attrs: { name, data: {} } }).run()
+}
 const availableArticles = computed(() =>
   [...repo.fileTree]
     .filter((file) => file.path.endsWith('.md'))
@@ -62,6 +68,7 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
+    ElementNode,
     Markdown.configure({
       html: true,              // Allow HTML tags like <br> and <cite> to pass through
       transformPastedText: true,
@@ -482,6 +489,14 @@ function createArticle() {
                 d="M3 10h18M10 3v18m-6-15h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
             </svg>
           </button>
+
+          <!-- Insert custom element -->
+          <select v-if="elementEntries.length" :value="''" @change="(e) => { insertElement((e.target as HTMLSelectElement).value); (e.target as HTMLSelectElement).value = '' }"
+            class="ml-1 text-xs px-2 py-1 rounded-md border cursor-pointer font-medium outline-none"
+            :class="ui.darkMode ? 'bg-surface-800 border-surface-700 text-surface-200' : 'bg-surface-50 border-surface-200 text-surface-700'">
+            <option value="">{{ t('element.insert') }}</option>
+            <option v-for="[key, el] in elementEntries" :key="key" :value="key">{{ el.label }}</option>
+          </select>
 
           <div class="flex-1"></div>
 

@@ -134,7 +134,7 @@ function onDragOver(e: DragEvent, group: string) {
   dragTarget.value = group
 }
 
-function onDragLeave(e: DragEvent) {
+function onDragLeave() {
   dragTarget.value = null
 }
 
@@ -293,7 +293,7 @@ async function refreshAssetThumbs() {
   if (!ui.assetsOpen) return
   const visiblePaths = new Set(repo.assetTree.map(asset => asset.path))
 
-  for (const key of [...thumbCache.value.keys()]) {
+  for (const key of thumbCache.value.keys()) {
     if (!visiblePaths.has(key)) thumbCache.value.delete(key)
   }
 

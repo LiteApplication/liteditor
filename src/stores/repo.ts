@@ -4,7 +4,6 @@ import { useAuthStore } from "./auth";
 import {
   LiteEditorConfigSchema,
   type LiteEditorConfig,
-  type CarouselConfig,
   type FieldSchema,
 } from "@/types/schema";
 import { b64decode, b64encode } from "@/utils/encoding";

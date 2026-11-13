@@ -178,6 +178,17 @@ export default {
     empty: "Aucune diapositive pour l'instant. Ajoutez-en une !",
   },
 
+  // Custom elements
+  element: {
+    insert: "Insérer un élément",
+    edit: "Modifier",
+    remove: "Supprimer l'élément",
+    unknown: "Élément inconnu",
+    unknownHint: "Cet élément n'est pas défini dans .liteditor ; ses données sont conservées.",
+    save: "Terminé",
+    empty: "Vide",
+  },
+
   // Field inputs
   field: {
     selectOption: "Choisir…",

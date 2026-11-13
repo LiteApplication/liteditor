@@ -21,7 +21,7 @@ onMounted(() => {
     router.push({ name: 'repos' })
   } else {
     // Optionally poll githubActionStatus
-    const pollId = setInterval(() => {
+    setInterval(() => {
       if (repo.githubActionStatus === 'in_progress') {
         repo.fetchActionStatus()
       }

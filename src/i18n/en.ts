@@ -178,6 +178,17 @@ export default {
     empty: "No slides yet. Add one!",
   },
 
+  // Custom elements
+  element: {
+    insert: "Insert element",
+    edit: "Edit",
+    remove: "Remove element",
+    unknown: "Unknown element",
+    unknownHint: "This element is not defined in .liteditor; its data is kept unchanged.",
+    save: "Done",
+    empty: "Empty",
+  },
+
   // Field inputs
   field: {
     selectOption: "Select…",

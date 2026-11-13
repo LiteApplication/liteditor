@@ -73,8 +73,9 @@ if (dryRun) {
 }
 
 // Bump versions in package.json and package-lock.json (preserving formatting).
-function bumpJson(file: string, edit: (json: any) => void): void {
-  const json = JSON.parse(readFileSync(file, 'utf8'))
+type Json = { version?: string; packages?: Record<string, { version?: string }> }
+function bumpJson(file: string, edit: (json: Json) => void): void {
+  const json = JSON.parse(readFileSync(file, 'utf8')) as Json
   edit(json)
   writeFileSync(file, JSON.stringify(json, null, 2) + '\n')
 }

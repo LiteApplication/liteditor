@@ -88,7 +88,7 @@ function toggleFolder(folder: string) {
 async function refreshThumbs() {
   const visiblePaths = new Set(repo.assetTree.map(asset => asset.path))
 
-  for (const key of [...thumbs.value.keys()]) {
+  for (const key of thumbs.value.keys()) {
     if (!visiblePaths.has(key)) thumbs.value.delete(key)
   }
 
