@@ -191,3 +191,13 @@ npm run dev
 # Compiler les ressources minifiées en vue du déploiement en production
 npm run build
 ```
+
+## Compatibilité du schéma et versions
+
+Un fichier `.liteditor` valide pour une version publiée doit rester valide pour toutes les versions suivantes. Chaque release enregistre donc un instantané du schéma dans `_history/v<version>.schema.json` (JSON Schema généré depuis `src/types/schema.ts`).
+
+- `npm run schema:check` compare le schéma actuel à tous les instantanés. Sont refusés : suppression ou restriction d'un type, d'une valeur d'`enum` ou d'une propriété, propriété devenue obligatoire, rejet des propriétés inconnues. Sont acceptés : nouvelles propriétés optionnelles, nouveaux types de champs, `enum` élargis. Cette vérification tourne aussi en CI avant le build.
+- `npm run schema:test` exécute les tests du vérificateur.
+- `npm run release -- <patch|minor|major|x.y.z> [--dry-run]` exige un arbre git propre, refuse la release si le schéma est incompatible, incrémente la version, écrit l'instantané, crée le commit `release vX.Y.Z` et le tag annoté `vX.Y.Z`. Rien n'est poussé : lancez ensuite `git push && git push origin vX.Y.Z`.
+
+Ne modifiez jamais un fichier de `_history/` existant.
