@@ -12,6 +12,17 @@ export interface Toast {
   duration?: number
 }
 
+export interface DialogOptions {
+  title: string
+  message?: string
+  /** 'prompt' shows a text input; 'confirm' just buttons. */
+  kind: 'prompt' | 'confirm'
+  placeholder?: string
+  initialValue?: string
+  confirmLabel?: string
+  danger?: boolean
+}
+
 export const useUIStore = defineStore('ui', () => {
   const toasts = ref<Toast[]>([])
   const darkMode = ref(localStorage.getItem('liteditor_theme') !== 'light')
@@ -31,6 +42,33 @@ export const useUIStore = defineStore('ui', () => {
     if (idx !== -1) toasts.value.splice(idx, 1)
   }
 
+  // Promise-based dialogs, rendered by <DialogHost />
+  const dialog = ref<DialogOptions | null>(null)
+  let dialogResolve: ((value: string | boolean | null) => void) | null = null
+
+  function openDialog(opts: DialogOptions) {
+    dialogResolve?.(opts.kind === 'prompt' ? null : false) // supersede any open dialog
+    dialog.value = opts
+    return new Promise<string | boolean | null>((resolve) => { dialogResolve = resolve })
+  }
+
+  /** Ask for a line of text. Resolves to the trimmed text, or null if cancelled/empty. */
+  async function promptText(opts: Omit<DialogOptions, 'kind'>): Promise<string | null> {
+    const v = await openDialog({ ...opts, kind: 'prompt' })
+    return typeof v === 'string' && v.trim() ? v.trim() : null
+  }
+
+  /** Ask for confirmation. Resolves to true only if confirmed. */
+  async function confirmAction(opts: Omit<DialogOptions, 'kind'>): Promise<boolean> {
+    return (await openDialog({ ...opts, kind: 'confirm' })) === true
+  }
+
+  function closeDialog(value: string | boolean | null) {
+    dialog.value = null
+    dialogResolve?.(value)
+    dialogResolve = null
+  }
+
   function toggleDarkMode() {
     darkMode.value = !darkMode.value
     localStorage.setItem('liteditor_theme', darkMode.value ? 'dark' : 'light')
@@ -48,6 +86,7 @@ export const useUIStore = defineStore('ui', () => {
 
   return {
     toasts, darkMode, commitDrawerOpen, assetsOpen, settingsOpen, locale,
+    dialog, promptText, confirmAction, closeDialog,
     addToast, removeToast, toggleDarkMode, toggleLocale,
   }
 })

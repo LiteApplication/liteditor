@@ -1,14 +1,13 @@
 <script setup lang="ts">
+import AppHeader from '@/components/AppHeader.vue'
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/stores/auth'
 import { useRepoStore, type GitHubRepo } from '@/stores/repo'
 import { useUIStore } from '@/stores/ui'
 
 const { t } = useI18n()
 const router = useRouter()
-const auth = useAuthStore()
 const repo = useRepoStore()
 const ui = useUIStore()
 
@@ -52,51 +51,7 @@ async function selectRepo(r: GitHubRepo) {
 <template>
   <div class="min-h-screen flex flex-col" :class="ui.darkMode ? 'bg-surface-950 text-surface-50' : 'bg-surface-50 text-surface-900'">
 
-    <!-- Header -->
-    <header class="border-b px-6 py-4 flex items-center gap-4"
-            :class="ui.darkMode ? 'bg-surface-900/80 border-surface-800 backdrop-blur' : 'bg-white border-surface-200 shadow-sm'">
-      <div class="flex items-center gap-3 flex-1">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-105"
-             style="background: linear-gradient(135deg, #3b61ff, #1e3ef5);">
-          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        </div>
-        <span class="font-bold text-lg">LiteEditor</span>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <!-- Locale toggle -->
-        <button @click="ui.toggleLocale" class="flex flex-col items-center justify-center w-8 h-8 rounded-full transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
-                :class="ui.darkMode ? 'bg-surface-800 text-surface-300 hover:text-white hover:bg-surface-700' : 'bg-surface-200 text-surface-600 hover:text-surface-900 hover:bg-surface-300'"
-                :title="ui.locale === 'en' ? 'Switch to French' : 'Switch to English'">
-          <span class="text-xs font-bold leading-none select-none">{{ ui.locale.toUpperCase() }}</span>
-        </button>
-
-        <button @click="ui.toggleDarkMode" class="p-2 rounded-lg transition-colors cursor-pointer hover:scale-110 active:scale-95 duration-150"
-                :class="ui.darkMode ? 'text-surface-400 hover:text-surface-200 hover:bg-surface-800' : 'text-surface-500 hover:text-surface-700 hover:bg-surface-100'"
-                :title="ui.darkMode ? t('lightMode') : t('darkMode')">
-          <svg v-if="ui.darkMode" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-          </svg>
-          <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-          </svg>
-        </button>
-
-        <div class="flex items-center gap-2">
-          <img :src="auth.user?.avatar_url" :alt="auth.user?.login" class="w-7 h-7 rounded-full border"
-               :class="ui.darkMode ? 'border-surface-700' : 'border-surface-200'" />
-          <span class="text-sm font-medium">{{ auth.user?.login }}</span>
-        </div>
-
-        <button @click="auth.logout(); $router.push({ name: 'login' })"
-                class="text-sm px-3 py-1.5 rounded-lg transition-colors cursor-pointer hover:scale-[1.02] active:scale-[0.98] duration-150"
-                :class="ui.darkMode ? 'text-surface-400 hover:text-surface-200 hover:bg-surface-800' : 'text-surface-500 hover:text-surface-700 hover:bg-surface-100'">
-          {{ t('signOut') }}
-        </button>
-      </div>
-    </header>
+    <AppHeader />
 
     <!-- Main -->
     <main class="flex-1 max-w-4xl mx-auto w-full px-6 py-10">

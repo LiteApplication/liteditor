@@ -62,13 +62,13 @@ export default {
     newRootPage: "New Root Page",
     newFolder: "New Folder",
     newPage: "New Page",
-    newPagePrompt: "New page name (will be converted to lowercase-with-dashes.md):",
-    newFolderPrompt: "New folder name (will be converted to lowercase-with-dashes):",
+    newPagePrompt: "New page name (will be converted to lowercase-with-dashes.md)",
+    newFolderPrompt: "New folder name (will be converted to lowercase-with-dashes)",
     configError: "Config error",
     carousels: "Carousels",
     addImage: "Add Image",
     newAssetFolder: "New asset folder",
-    newAssetFolderPrompt: "New asset folder name (you can use / for nesting):",
+    newAssetFolderPrompt: "New asset folder name (you can use / for nesting)",
   },
 
   // Context menu
@@ -128,7 +128,6 @@ export default {
   // Settings panel
   settings: {
     title: "General Settings",
-    editing: "Editing",
     noSchema: "No schema defined in the configuration file.",
     unsaved: "Unsaved — click",
     unsavedPublish: "Publish",
@@ -156,7 +155,7 @@ export default {
     createArticleHint: "Start from a fresh page and fill in the content fields.",
     createArticleAction: "Create article",
     openArticle: "Open article",
-    newArticlePrompt: "New article name (will be converted to lowercase-with-dashes.md):",
+    newArticlePrompt: "New article name (will be converted to lowercase-with-dashes.md)",
   },
 
   // Carousel editor
@@ -176,6 +175,19 @@ export default {
     captionPlaceholder: "Optional caption…",
     dragToReorder: "Drag to reorder",
     empty: "No slides yet. Add one!",
+  },
+
+  // Dialogs
+  dialog: {
+    newPage: "New page",
+    newFolder: "New folder",
+    newAssetFolder: "New asset folder",
+    newArticle: "New article",
+    rename: "Rename",
+    renameLabel: "New name",
+    create: "Create",
+    delete: "Delete",
+    deleteTitle: "Delete item?",
   },
 
   // Custom elements

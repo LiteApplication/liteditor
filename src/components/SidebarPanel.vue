@@ -99,16 +99,16 @@ function toggleFolder(folder: string) {
   }
 }
 
-function createNewPage(folder: string) {
-  const name = prompt(t('sidebar.newPagePrompt'))
+async function createNewPage(folder: string) {
+  const name = await ui.promptText({ title: t('dialog.newPage'), message: t('sidebar.newPagePrompt'), confirmLabel: t('dialog.create') })
   if (!name) return
   const contentPath = repo.config?.content_path ?? ''
   const fullDir = folder === '/' ? contentPath : `${contentPath}/${folder}`
   repo.createFile(fullDir, name)
 }
 
-function createNewFolder() {
-  const name = prompt(t('sidebar.newFolderPrompt'))
+async function createNewFolder() {
+  const name = await ui.promptText({ title: t('dialog.newFolder'), message: t('sidebar.newFolderPrompt'), confirmLabel: t('dialog.create') })
   if (!name) return
   const sanitized = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
   if (!sanitized) return
@@ -170,11 +170,11 @@ function openCtx(e: MouseEvent, path: string, isFolder: boolean) {
 }
 function closeCtx() { ctxMenu.value.show = false }
 
-function ctxRename() {
+async function ctxRename() {
   const { path, isFolder } = ctxMenu.value
   const oldName = path.split('/').pop()!
-  const newName = prompt(t('ctx.renamePrompt'), oldName)
   closeCtx()
+  const newName = await ui.promptText({ title: t('dialog.rename'), message: oldName, placeholder: t('dialog.renameLabel'), initialValue: oldName, confirmLabel: t('dialog.rename') })
   if (!newName || newName === oldName) return
   const dir = path.split('/').slice(0, -1).join('/')
   const newPath = `${dir}/${newName}`
@@ -185,12 +185,12 @@ function ctxDuplicate() {
   closeCtx()
   repo.duplicateItem(path, isFolder)
 }
-function ctxDelete() {
+async function ctxDelete() {
   const { path, isFolder } = ctxMenu.value
-  if (confirm(t('ctx.deleteConfirm', { path }))) {
+  closeCtx()
+  if (await ui.confirmAction({ title: t('dialog.deleteTitle'), message: t('ctx.deleteConfirm', { path }), confirmLabel: t('dialog.delete'), danger: true })) {
     repo.deleteItem(path, isFolder)
   }
-  closeCtx()
 }
 
 const carouselKeys = computed(() => Object.keys(repo.config?.carousels ?? {}))
@@ -336,8 +336,8 @@ function uploadNewImage() {
   input.click()
 }
 
-function createNewAssetFolder() {
-  const name = prompt(t('sidebar.newAssetFolderPrompt'))
+async function createNewAssetFolder() {
+  const name = await ui.promptText({ title: t('dialog.newAssetFolder'), message: t('sidebar.newAssetFolderPrompt'), confirmLabel: t('dialog.create') })
   if (!name) return
   repo.createAssetFolder(name)
   const sanitized = name
@@ -360,20 +360,20 @@ function openAssetCtx(e: MouseEvent, path: string, name: string) {
 }
 function closeAssetCtx() { assetCtxMenu.value.show = false }
 
-function ctxRenameAsset() {
+async function ctxRenameAsset() {
   const { path, name } = assetCtxMenu.value
-  const newName = prompt(t('ctx.renamePrompt'), name)
   closeAssetCtx()
+  const newName = await ui.promptText({ title: t('dialog.rename'), message: name, placeholder: t('dialog.renameLabel'), initialValue: name, confirmLabel: t('dialog.rename') })
   if (!newName || newName === name) return
   void repo.renameAsset(path, newName)
 }
 
-function ctxDeleteAsset() {
+async function ctxDeleteAsset() {
   const { path } = assetCtxMenu.value
-  if (confirm(t('ctx.deleteConfirm', { path }))) {
+  closeAssetCtx()
+  if (await ui.confirmAction({ title: t('dialog.deleteTitle'), message: t('ctx.deleteConfirm', { path }), confirmLabel: t('dialog.delete'), danger: true })) {
     repo.deleteAsset(path)
   }
-  closeAssetCtx()
 }
 </script>
 

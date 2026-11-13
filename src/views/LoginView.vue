@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppLogo from '@/components/AppLogo.vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
@@ -25,12 +26,8 @@ const ui = useUIStore()
 
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 transition-transform duration-300 hover:scale-105"
-             style="background: linear-gradient(135deg, #3b61ff, #1e3ef5); box-shadow: 0 0 40px rgba(59, 97, 255, 0.4);">
-          <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        </div>
+        <AppLogo class="inline-block w-14 h-14 rounded-2xl mb-4 transition-transform duration-300 hover:scale-105"
+                 style="box-shadow: 0 0 40px rgba(59, 97, 255, 0.4);" />
         <h1 class="text-2xl font-bold tracking-tight" :class="ui.darkMode ? 'text-white' : 'text-surface-900'">
           {{ t('login.title') }}
         </h1>

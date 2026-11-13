@@ -62,13 +62,13 @@ export default {
     newRootPage: "Nouvelle page racine",
     newFolder: "Nouveau dossier",
     newPage: "Nouvelle page",
-    newPagePrompt: "Nom de la nouvelle page (sera converti en minuscules-avec-tirets.md) :",
-    newFolderPrompt: "Nom du nouveau dossier (sera converti en minuscules-avec-tirets) :",
+    newPagePrompt: "Nom de la nouvelle page (sera converti en minuscules-avec-tirets.md)",
+    newFolderPrompt: "Nom du nouveau dossier (sera converti en minuscules-avec-tirets)",
     configError: "Erreur de configuration",
     carousels: "Carrousels",
     addImage: "Ajouter une image",
     newAssetFolder: "Nouveau dossier média",
-    newAssetFolderPrompt: "Nom du nouveau dossier média (vous pouvez utiliser / pour imbriquer) :",
+    newAssetFolderPrompt: "Nom du nouveau dossier média (vous pouvez utiliser / pour imbriquer)",
   },
 
   // Context menu
@@ -128,7 +128,6 @@ export default {
   // Settings panel
   settings: {
     title: "Paramètres généraux",
-    editing: "Édition de",
     noSchema: "Aucun schéma défini dans le fichier de configuration.",
     unsaved: "Non sauvegardé — cliquez sur",
     unsavedPublish: "Publier",
@@ -156,7 +155,7 @@ export default {
     createArticleHint: "Commencez par une page vide et complétez les champs de contenu.",
     createArticleAction: "Créer l'article",
     openArticle: "Ouvrir l'article",
-    newArticlePrompt: "Nom du nouvel article (sera converti en minuscules-avec-tirets.md) :",
+    newArticlePrompt: "Nom du nouvel article (sera converti en minuscules-avec-tirets.md)",
   },
 
   // Carousel editor
@@ -176,6 +175,19 @@ export default {
     captionPlaceholder: "Légende facultative…",
     dragToReorder: "Glisser pour réordonner",
     empty: "Aucune diapositive pour l'instant. Ajoutez-en une !",
+  },
+
+  // Dialogs
+  dialog: {
+    newPage: "Nouvelle page",
+    newFolder: "Nouveau dossier",
+    newAssetFolder: "Nouveau dossier média",
+    newArticle: "Nouvel article",
+    rename: "Renommer",
+    renameLabel: "Nouveau nom",
+    create: "Créer",
+    delete: "Supprimer",
+    deleteTitle: "Supprimer l'élément ?",
   },
 
   // Custom elements

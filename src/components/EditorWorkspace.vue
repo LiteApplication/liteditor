@@ -201,9 +201,9 @@ function openArticle(nodePath: string) {
   ui.settingsOpen = false
 }
 
-function createArticle() {
+async function createArticle() {
   const contentPath = repo.config?.content_path ?? ''
-  const name = prompt(t('workspace.newArticlePrompt'))
+  const name = await ui.promptText({ title: t('dialog.newArticle'), message: t('workspace.newArticlePrompt'), confirmLabel: t('dialog.create') })
   if (!name) return
   repo.createFile(contentPath, name)
   ui.settingsOpen = false

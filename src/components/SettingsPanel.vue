@@ -34,9 +34,6 @@ function isWideField(key: string) {
           </div>
           <h2 class="text-xl font-bold">{{ t('settings.title') }}</h2>
         </div>
-        <p class="text-sm ml-11" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'">
-          {{ t('settings.editing') }} <code class="font-mono text-brand-400 text-xs">{{ repo.config?.settings_file }}</code>
-        </p>
       </div>
 
       <!-- No schema -->
