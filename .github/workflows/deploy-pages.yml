@@ -41,7 +41,15 @@ jobs:
         run: npm run schema:test && npm run schema:check
 
       - name: Build
-        run: npm run build
+        # Optional repository variables override the tracked .env (public values only);
+        # when unset, the .env values are used.
+        run: |
+          [ -n "$CLIENT_ID" ] && export VITE_GITHUB_CLIENT_ID="$CLIENT_ID"
+          [ -n "$PROXY_URL" ] && export VITE_TOKEN_PROXY_URL="$PROXY_URL"
+          npm run build
+        env:
+          CLIENT_ID: ${{ vars.VITE_GITHUB_CLIENT_ID }}
+          PROXY_URL: ${{ vars.VITE_TOKEN_PROXY_URL }}
 
       - name: Add SPA fallback
         run: cp dist/index.html dist/404.html

@@ -79,6 +79,58 @@ export function adjustDocumentPaths(
 }
 
 /**
+ * Rewrite references to a moved asset inside a page: relative links in the body
+ * (resolved from the page) and frontmatter values, either relative to the page
+ * or repo-relative (optionally with a leading slash).
+ */
+export function updateAssetReferences(
+  pagePath: string,
+  oldAssetPath: string,
+  newAssetPath: string,
+  content: string,
+  frontmatter: Record<string, unknown>,
+) {
+  const rewrite = (val: string): string | null => {
+    if (val.startsWith('./') || val.startsWith('../')) {
+      return resolveRelativePath(pagePath, val) === oldAssetPath
+        ? computeRelativePath(pagePath, newAssetPath)
+        : null
+    }
+    if (val === oldAssetPath) return newAssetPath
+    if (val === `/${oldAssetPath}`) return `/${newAssetPath}`
+    return null
+  }
+
+  const urlRegex = /\]\(([^)]+)\)|src="([^"]+)"|href="([^"]+)"/g
+  const newContent = content.replace(urlRegex, (match, g1, g2, g3) => {
+    const url = g1 || g2 || g3
+    const rel = url ? rewrite(url) : null
+    if (rel === null) return match
+    if (g1) return `](${rel})`
+    if (g2) return `src="${rel}"`
+    return `href="${rel}"`
+  })
+
+  let newFm = frontmatter
+  if (frontmatter && typeof frontmatter === 'object') {
+    newFm = JSON.parse(JSON.stringify(frontmatter))
+    const walk = (obj: Record<string, unknown>) => {
+      for (const key in obj) {
+        const val = obj[key]
+        if (typeof val === 'string') {
+          const rel = rewrite(val)
+          if (rel !== null) obj[key] = rel
+        } else if (typeof val === 'object' && val !== null) {
+          walk(val as Record<string, unknown>)
+        }
+      }
+    }
+    walk(newFm)
+  }
+  return { newContent, newFm }
+}
+
+/**
  * Build a raw.githubusercontent.com URL for a file.
  */
 export function rawGitHubUrl(

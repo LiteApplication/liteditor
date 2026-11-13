@@ -328,7 +328,7 @@ function uploadNewImage() {
       if (!base64) return
       repo.uploadAsset(file.name, base64)
       ui.assetsOpen = true
-      const fullPath = `${repo.config?.assets_path}/${file.name.replace(/[^a-zA-Z0-9.-_]+/g, '-')}`
+      const fullPath = `${repo.config?.assets_path}/${file.name.replace(/[^a-zA-Z0-9._-]+/g, '-')}`
       thumbCache.value.set(fullPath, dataUrl)
     }
     reader.readAsDataURL(file)

@@ -2,6 +2,10 @@
 
 Un CMS léger intégré directement à vos dépôts GitHub. LiteEditor vous permet de modifier votre contenu Markdown, gérer vos médias, et configurer des modules personnalisés (comme des carrousels) depuis une interface web élégante et simple.
 
+## Documentation
+
+La documentation pour rendre un site compatible avec LiteEditor (configuration, types de champs, paramètres, carrousels, éléments personnalisés, exemples et compatibilité du schéma) est rédigée en anglais dans [`docs/README.md`](docs/README.md).
+
 ## Configuration : le fichier `.liteditor`
 
 LiteEditor lit un fichier `.liteditor` placé à la racine du dépôt. Ce fichier peut être écrit en JSON ou en YAML, puis il est validé avant d'être utilisé.

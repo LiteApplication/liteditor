@@ -7,11 +7,11 @@ import {
   type FieldSchema,
 } from "@/types/schema";
 import { b64decode, b64encode } from "@/utils/encoding";
-import { resolveRelativePath, computeRelativePath, adjustDocumentPaths } from "@/utils/paths";
+import { resolveRelativePath, computeRelativePath, adjustDocumentPaths, updateAssetReferences } from "@/utils/paths";
 import { parseFrontmatter, serializeFrontmatter } from "@/utils/frontmatter";
 
 // Re-export utilities that external components import directly from this module
-export { b64decode, b64encode, resolveRelativePath, computeRelativePath, adjustDocumentPaths };
+export { b64decode, b64encode, resolveRelativePath, computeRelativePath, adjustDocumentPaths, updateAssetReferences };
 
 export interface CarouselSlide {
   src?: string; // repo-relative image path (optional for new slides)
@@ -373,20 +373,19 @@ export const useRepoStore = defineStore("repo", () => {
     const { owner, name, default_branch } = selectedRepo.value;
     try {
       const res = await auth.githubFetch(
-        `/repos/${owner.login}/${name}/actions/runs?branch=${default_branch}&per_page=1&exclude_pull_requests=true`,
+        `/repos/${owner.login}/${name}/actions/runs?branch=${default_branch}&per_page=30&exclude_pull_requests=true`,
       );
       if (!res.ok) return;
       const data = (await res.json()) as {
-        workflow_runs: Array<{ status: string; conclusion: string }>;
+        workflow_runs: Array<{ status: string; conclusion: string; name?: string; path?: string }>;
       };
-      if (data.workflow_runs && data.workflow_runs.length > 0) {
-        const run = data.workflow_runs[0];
-        if (run) {
-          if (run.status === "completed") {
-            githubActionStatus.value = run.conclusion === "success" ? "success" : "failure";
-          } else {
-            githubActionStatus.value = "in_progress";
-          }
+      // Only consider deploy/Pages workflows so unrelated failing workflows (lint, tests…) don't show a failed build
+      const run = data.workflow_runs?.find((r) => /pages|deploy/i.test(`${r.name ?? ""} ${r.path ?? ""}`));
+      if (run) {
+        if (run.status === "completed") {
+          githubActionStatus.value = run.conclusion === "success" ? "success" : "failure";
+        } else {
+          githubActionStatus.value = "in_progress";
         }
       } else {
         githubActionStatus.value = null;
@@ -435,7 +434,7 @@ export const useRepoStore = defineStore("repo", () => {
   // Asset Operations
   function uploadAsset(fileName: string, base64Data: string) {
     if (!selectedRepo.value || !config.value?.assets_path) return;
-    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-_]+/g, "-");
+    const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]+/g, "-");
     const fullPath = `${config.value.assets_path}/${sanitizedName}`;
 
     const newNode: TreeNode = { path: fullPath, name: sanitizedName, type: "file" };
@@ -557,7 +556,8 @@ export const useRepoStore = defineStore("repo", () => {
     // 4. Update file contents and frontmatters
     for (const [filePath, file] of stagedFiles.value) {
       if (file.type !== "markdown") continue;
-      const { newContent, newFm } = adjustDocumentPaths(
+      const { newContent, newFm } = updateAssetReferences(
+        filePath,
         oldPath,
         newPath,
         file.content,
