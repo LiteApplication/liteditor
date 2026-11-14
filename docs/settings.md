@@ -73,6 +73,23 @@ import site from '../data/site.json';
 console.log(site.theme);
 ```
 
+Wrap the import in one module that supplies defaults, so a missing key or an empty value does not break the build:
+
+```ts
+// src/utils/site.ts
+import site from '../data/site.json'
+
+export const settings = {
+  email: '',
+  copyright: 'Copyright © Jane Doe',
+  ...site,
+}
+```
+
+A field added to `schema` is not in the JSON until someone saves it in the editor, so always provide a default for new fields. Treat an empty string as "hide this element" rather than rendering an empty link.
+
+Settings suit short global texts too, such as the first part of a footer line (`short-text`), and not only links and images. Keep fixed credits in your code and put only the editable part in settings.
+
 Because the file is read at build time, a change takes effect once the deploy pipeline has run (see [deployment.md](deployment.md)).
 
 Next: [carousels.md](carousels.md)
