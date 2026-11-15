@@ -8,7 +8,7 @@ export {
   serializeConfig,
   ConfigError,
 } from './config.ts'
-export type { ConfigInput, ElementInput, CarouselInput, LoadedConfig } from './config.ts'
+export type { ConfigInput, ElementInput, CarouselInput, FoldersInput, LoadedConfig } from './config.ts'
 export { createSite } from './site.ts'
 export type { Site, SiteOptions, Page, Carousel, SiteBlock, TypedElementBlock, UnknownElementBlock } from './site.ts'
 export { splitBody, ELEMENT_PREFIX } from './elements.ts'

@@ -36,4 +36,5 @@ export default defineConfig({
     },
   },
   elements: { callout },
+  folders: { allow_create: true, max_depth: 2 },
 })

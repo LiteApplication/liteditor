@@ -26,6 +26,13 @@ export interface CarouselInput<S extends FieldMap = FieldMap, M extends FieldMap
   frontmatter?: M
 }
 
+export interface FoldersInput {
+  /** Whether editors may create folders. Defaults to true. */
+  allow_create?: boolean
+  /** Maximum folder nesting depth below `content_path` / `assets_path`. 1 = top-level folders only. */
+  max_depth?: number
+}
+
 /** Same keys as the `.liteditor` file, so the generated file is a plain serialisation. */
 export interface ConfigInput<
   S extends FieldMap = FieldMap,
@@ -40,6 +47,7 @@ export interface ConfigInput<
   frontmatter?: F
   carousels?: C
   elements?: E
+  folders?: FoldersInput
 }
 
 /** Identity helper that keeps the literal field types so loaded data is typed. */
@@ -85,6 +93,7 @@ export function serializeConfig(config: ConfigInput<any, any, any, any> | LiteEd
     'frontmatter',
     'carousels',
     'elements',
+    'folders',
   ] as const
   const out: Record<string, unknown> = {}
   for (const key of known) {

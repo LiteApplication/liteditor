@@ -27,6 +27,14 @@ test('generated config is accepted by the editor schema', async () => {
   assert.ok(LiteEditorConfigSchema.safeParse(JSON.parse(serializeConfig(config))).success)
 })
 
+test('folders restrictions are validated', () => {
+  const base = { content_path: 'c', assets_path: 'a' }
+  assert.ok(LiteEditorConfigSchema.safeParse({ ...base, folders: { allow_create: false, max_depth: 1 } }).success)
+  assert.ok(!LiteEditorConfigSchema.safeParse({ ...base, folders: { max_depth: 0 } }).success)
+  assert.ok(!LiteEditorConfigSchema.safeParse({ ...base, folders: { max_depth: 1.5 } }).success)
+  assert.ok(!LiteEditorConfigSchema.safeParse({ ...base, folders: { allow_create: 'no' } }).success)
+})
+
 test('invalid config is rejected with a path', () => {
   assert.throws(() => serializeConfig({ content_path: 'a' } as never), /assets_path/)
 })

@@ -250,8 +250,27 @@ elements:
 | `frontmatter` | no | Fields for the frontmatter of each Markdown page. See [Content](content.md). |
 | `carousels` | no | Named slideshow modules, each with its own `carousel.json`. See [Carousels](carousels.md). |
 | `elements` | no | Reusable blocks that editors insert into pages. See [Custom elements](custom-elements.md). |
+| `folders` | no | Restricts whether editors can create folders and how deep they can nest. See [Folder restrictions](#folder-restrictions). |
 
 Unknown top-level keys are not reported as errors. They are dropped when LiteEditor parses the file, so they have no effect. Check spelling against this table. In TypeScript the compiler already rejects unknown keys.
+
+## Folder restrictions
+
+By default editors can create any number of folders, nested as deep as they like, in both the content tree and the assets tree. `folders` limits this:
+
+```ts
+export default defineConfig({
+  // ...
+  folders: { allow_create: true, max_depth: 2 },
+})
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `allow_create` | `true` | When `false`, the "new folder" buttons are hidden and editors cannot move items into a folder that does not exist yet. Existing folders keep working. |
+| `max_depth` | unlimited | Maximum nesting below `content_path` / `assets_path`. `1` allows top-level folders only, `2` allows `a/b`, and so on. Applies to new folders and to moving folders by drag and drop. Existing deeper folders are left alone. |
+
+These are editor-side restrictions: they guide editors but do not stop someone committing to the repository directly.
 
 ## Path rules
 

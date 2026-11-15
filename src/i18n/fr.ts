@@ -65,6 +65,8 @@ export default {
     newPagePrompt: "Nom de la nouvelle page (sera converti en minuscules-avec-tirets.md)",
     newFolderPrompt: "Nom du nouveau dossier (sera converti en minuscules-avec-tirets)",
     configError: "Erreur de configuration",
+    folderTooDeepTitle: "Dossier non autorisé",
+    folderTooDeep: "Les dossiers peuvent être imbriqués sur {max} niveau(x) au maximum.",
     carousels: "Carrousels",
     addImage: "Ajouter une image",
     newAssetFolder: "Nouveau dossier média",

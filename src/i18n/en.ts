@@ -64,6 +64,8 @@ export default {
     newPage: "New Page",
     newPagePrompt: "New page name (will be converted to lowercase-with-dashes.md)",
     newFolderPrompt: "New folder name (will be converted to lowercase-with-dashes)",
+    folderTooDeepTitle: "Folder not allowed",
+    folderTooDeep: "Folders can be nested at most {max} level(s) deep.",
     configError: "Config error",
     carousels: "Carousels",
     addImage: "Add Image",

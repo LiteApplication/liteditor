@@ -455,8 +455,37 @@ export const useRepoStore = defineStore("repo", () => {
     if (stagedDeletions.value.has(fullPath)) stagedDeletions.value.delete(fullPath);
   }
 
+  const canCreateFolders = computed(() => config.value?.folders?.allow_create !== false);
+
+  /** True if a folder at this relative path (e.g. "a/b", depth 2) fits the config. `extraDepth` is the depth of the subtree below it (when moving a folder). */
+  function folderDepthAllowed(relPath: string, extraDepth = 0): boolean {
+    const max = config.value?.folders?.max_depth;
+    if (max === undefined) return true;
+    const depth = relPath === "/" || !relPath ? 0 : relPath.split("/").filter(Boolean).length;
+    return depth + extraDepth <= max;
+  }
+
+  /** Number of folder levels below a content folder (relative path, "/" for the root). */
+  function contentSubtreeHeight(relPath: string): number {
+    const cp = config.value?.content_path ?? "";
+    const base = relPath === "/" ? "" : relPath;
+    const prefix = base ? `${base}/` : "";
+    let height = 0;
+    const consider = (rel: string) => {
+      if (base && !rel.startsWith(prefix)) return;
+      const levels = rel.slice(prefix.length).split("/").filter(Boolean).length;
+      if (levels > height) height = levels;
+    };
+    for (const n of fileTree.value) {
+      const rel = n.path.slice(cp.length + 1).split("/").slice(0, -1).join("/");
+      if (rel) consider(rel);
+    }
+    for (const cf of customFolders.value) consider(cf);
+    return height;
+  }
+
   function createAssetFolder(folderName: string) {
-    if (!config.value?.assets_path) return;
+    if (!config.value?.assets_path || !canCreateFolders.value) return;
 
     const sanitized = folderName
       .split("/")
@@ -470,6 +499,7 @@ export const useRepoStore = defineStore("repo", () => {
       .join("/");
 
     if (!sanitized) return;
+    if (!folderDepthAllowed(sanitized)) return;
 
     if (!customAssetFolders.value.includes(sanitized)) {
       customAssetFolders.value.push(sanitized);
@@ -1075,6 +1105,9 @@ export const useRepoStore = defineStore("repo", () => {
     updateCarouselData,
     updateCarouselMeta,
     createAssetFolder,
+    canCreateFolders,
+    folderDepthAllowed,
+    contentSubtreeHeight,
     uploadAsset,
     deleteAsset,
     renameAsset,

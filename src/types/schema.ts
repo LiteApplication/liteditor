@@ -106,6 +106,15 @@ export const ElementConfigSchema = z
 
 export type ElementConfig = z.infer<typeof ElementConfigSchema>
 
+export const FoldersConfigSchema = z.object({
+  /** Whether editors may create (and move into) folders. Defaults to true. */
+  allow_create: z.boolean().optional(),
+  /** Maximum nesting depth of folders below content_path / assets_path. 1 = top-level folders only. */
+  max_depth: z.number().int().min(1).optional(),
+})
+
+export type FoldersConfig = z.infer<typeof FoldersConfigSchema>
+
 export const LiteEditorConfigSchema = z.object({
   content_path: z.string(),
   assets_path: z.string(),
@@ -114,6 +123,7 @@ export const LiteEditorConfigSchema = z.object({
   frontmatter: z.record(z.string(), FieldSchemaSchema).optional(),
   carousels: z.record(z.string(), CarouselConfigSchema).optional(),
   elements: z.record(z.string(), ElementConfigSchema).optional(),
+  folders: FoldersConfigSchema.optional(),
 })
 
 export type LiteEditorConfig = z.infer<typeof LiteEditorConfigSchema>

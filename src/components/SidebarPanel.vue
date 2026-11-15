@@ -112,6 +112,11 @@ async function createNewFolder() {
   if (!name) return
   const sanitized = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
   if (!sanitized) return
+  if (!repo.canCreateFolders) return
+  if (!repo.folderDepthAllowed(sanitized)) {
+    ui.addToast({ type: 'error', title: t('sidebar.folderTooDeepTitle'), message: t('sidebar.folderTooDeep', { max: repo.config?.folders?.max_depth }) })
+    return
+  }
   if (!repo.customFolders.includes(sanitized)) {
     repo.customFolders.push(sanitized)
     expandedFolders.value.add(sanitized)
@@ -158,6 +163,13 @@ function onDrop(e: DragEvent, group: string) {
     const folderName = oldPath.split('/').pop()!
     const newPath = `${targetDir}/${folderName}`
     if (oldPath !== newPath && !newPath.startsWith(oldPath + '/')) {
+      const relOld = oldPath === cp ? '/' : oldPath.slice(cp.length + 1)
+      const relNew = newPath.slice(cp.length + 1)
+      const height = repo.contentSubtreeHeight(relOld)
+      if (!repo.folderDepthAllowed(relNew, Math.max(height - 1, 0))) {
+        ui.addToast({ type: 'error', title: t('sidebar.folderTooDeepTitle'), message: t('sidebar.folderTooDeep', { max: repo.config?.folders?.max_depth }) })
+        return
+      }
       void repo.renameItem(oldPath, newPath, true)
     }
   }
@@ -337,9 +349,9 @@ function uploadNewImage() {
 }
 
 async function createNewAssetFolder() {
+  const maxDepth = repo.config?.folders?.max_depth
   const name = await ui.promptText({ title: t('dialog.newAssetFolder'), message: t('sidebar.newAssetFolderPrompt'), confirmLabel: t('dialog.create') })
   if (!name) return
-  repo.createAssetFolder(name)
   const sanitized = name
     .split('/')
     .map(part => part.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, ''))
@@ -347,6 +359,11 @@ async function createNewAssetFolder() {
     .join('/')
 
   if (!sanitized) return
+  if (!repo.folderDepthAllowed(sanitized)) {
+    ui.addToast({ type: 'error', title: t('sidebar.folderTooDeepTitle'), message: t('sidebar.folderTooDeep', { max: maxDepth }) })
+    return
+  }
+  repo.createAssetFolder(name)
   const parts = sanitized.split('/')
   for (let i = 1; i <= parts.length; i++) {
     assetExpandedFolders.value.add(parts.slice(0, i).join('/'))
@@ -420,7 +437,7 @@ async function ctxDeleteAsset() {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
               </svg>
             </button>
-            <button @click="createNewFolder"
+            <button v-if="repo.canCreateFolders" @click="createNewFolder"
               class="p-0.5 rounded-md transition-all duration-150 hover:bg-surface-200 dark:hover:bg-surface-700 hover:scale-110 active:scale-90"
               :title="t('sidebar.newFolder')">
               <svg class="w-4 h-4" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'" fill="none"
@@ -584,7 +601,7 @@ async function ctxDeleteAsset() {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
               </svg>
             </button>
-            <button @click="createNewAssetFolder"
+            <button v-if="repo.canCreateFolders" @click="createNewAssetFolder"
               class="opacity-0 group-hover:opacity-100 p-0.5 rounded-md transition-all duration-150 hover:bg-surface-200 dark:hover:bg-surface-700 hover:scale-110 active:scale-90"
               :title="t('sidebar.newAssetFolder')">
               <svg class="w-4 h-4" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'" fill="none"
