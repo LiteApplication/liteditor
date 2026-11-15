@@ -1,8 +1,16 @@
 {
   "name": "liteditor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build-time content loader and config generator for websites edited with LiteEditor",
-  "keywords": ["liteditor", "cms", "markdown", "frontmatter", "static-site", "vite", "astro"],
+  "keywords": [
+    "liteditor",
+    "cms",
+    "markdown",
+    "frontmatter",
+    "static-site",
+    "vite",
+    "astro"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LiteApplication/liteditor.git",
@@ -10,15 +18,31 @@
   },
   "type": "module",
   "sideEffects": false,
-  "bin": { "liteditor": "./dist/cli.js" },
+  "bin": {
+    "liteditor": "./dist/cli.js"
+  },
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./remark": { "types": "./dist/remark.d.ts", "default": "./dist/remark.js" },
-    "./vite": { "types": "./dist/vite.d.ts", "default": "./dist/vite.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./remark": {
+      "types": "./dist/remark.d.ts",
+      "default": "./dist/remark.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md"],
-  "engines": { "node": "^20.19.0 || >=22.12.0" },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "sync-schema": "node scripts/sync-schema.mjs",
     "sync-schema:check": "node scripts/sync-schema.mjs --check",
