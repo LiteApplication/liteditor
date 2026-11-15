@@ -19,6 +19,7 @@ Key points:
 6. [Settings](settings.md): global site settings stored in a JSON file.
 7. [Carousels](carousels.md): slideshow modules stored in `carousel.json`.
 8. [Custom elements](custom-elements.md): reusable blocks inserted into Markdown pages.
+   - [Page types and block mode](page-types.md): let editors pick a kind of page, restrict where pages go, and build pages from blocks only.
 9. [Deployment](deployment.md): building and publishing your site.
 10. [Hosting LiteEditor](hosting-liteditor.md): running your own LiteEditor instance.
 11. [Examples](examples.md): complete worked configurations.

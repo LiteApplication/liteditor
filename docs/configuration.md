@@ -251,6 +251,7 @@ elements:
 | `carousels` | no | Named slideshow modules, each with its own `carousel.json`. See [Carousels](carousels.md). |
 | `elements` | no | Reusable blocks that editors insert into pages. See [Custom elements](custom-elements.md). |
 | `folders` | no | Restricts whether editors can create folders and how deep they can nest. See [Folder restrictions](#folder-restrictions). |
+| `page_types` | no | Kinds of pages editors choose from when creating a page: allowed folders, page limits, edit modes and elements. See [Page types](page-types.md). |
 
 Unknown top-level keys are not reported as errors. They are dropped when LiteEditor parses the file, so they have no effect. Check spelling against this table. In TypeScript the compiler already rejects unknown keys.
 

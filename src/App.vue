@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import DialogHost from '@/components/DialogHost.vue'
+import NewPageDialog from '@/components/NewPageDialog.vue'
 </script>
 
 <template>
@@ -10,4 +11,5 @@ import DialogHost from '@/components/DialogHost.vue'
     </Transition>
   </RouterView>
   <DialogHost />
+  <NewPageDialog />
 </template>

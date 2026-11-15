@@ -24,6 +24,10 @@ You describe the site once in `liteditor.config.ts`, and:
 
 If you prefer a hand-written `.liteditor`, delete `liteditor.config.ts`: the loaders read it as is, but data is not typed.
 
+## Page types
+
+`definePageType()` declares a page type for `page_types` (see [Page types](page-types.md)). Pages returned by `createSite` carry `type` (the resolved page type key) and `mode` (`'rich'` or `'block'`); `blocks` gives the ordered element and Markdown blocks. `npx liteditor check` reports pages that break their type's folder, limit, element or Markdown rules.
+
 ## Direct edit link
 
 `https://editor.liteapp.fr/edit/<github user>/<repo>` opens the editor straight on a site (signing in first if needed). `editUrl()` builds it for you:

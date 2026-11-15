@@ -73,6 +73,10 @@ export const ElementConfigSchema = z
   .object({
     label: z.string(),
     description: z.string().optional(),
+    /** Accent color of the block in the editor, as #RRGGBB. */
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a #RRGGBB color').optional(),
+    /** Icon of the block in the editor: a Material icon name (e.g. "campaign"), or a short text such as an emoji. */
+    icon: z.string().max(32).optional(),
     fields: z.record(z.string(), FieldSchemaSchema),
     display: z
       .object({
@@ -115,6 +119,30 @@ export const FoldersConfigSchema = z.object({
 
 export type FoldersConfig = z.infer<typeof FoldersConfigSchema>
 
+export const PAGE_MODES = ['rich', 'block'] as const
+export type PageMode = (typeof PAGE_MODES)[number]
+
+export const PageTypeConfigSchema = z.object({
+  label: z.string(),
+  description: z.string().optional(),
+  /** Content-relative folders pages of this type may live in. First is the default. Omitted = anywhere. */
+  folders: z.array(z.string()).optional(),
+  /** Whether editors may create subfolders under `folders` for this type. Defaults to false when `folders` is set. */
+  allow_new_folders: z.boolean().optional(),
+  /** Maximum number of pages of this type in one folder. */
+  max_pages_per_folder: z.number().int().min(1).optional(),
+  /** Allowed edit modes, first is the default. Defaults to ['rich']. */
+  modes: z.array(z.enum(PAGE_MODES)).min(1).optional(),
+  /** Allowed element names. Omitted = all elements. */
+  elements: z.array(z.string()).optional(),
+  /** Block mode only: allow Markdown segments between elements. Defaults to false. */
+  markdown_block: z.boolean().optional(),
+  /** Extra frontmatter fields for pages of this type, merged over the global ones. */
+  frontmatter: z.record(z.string(), FieldSchemaSchema).optional(),
+})
+
+export type PageTypeConfig = z.infer<typeof PageTypeConfigSchema>
+
 export const LiteEditorConfigSchema = z.object({
   content_path: z.string(),
   assets_path: z.string(),
@@ -124,6 +152,7 @@ export const LiteEditorConfigSchema = z.object({
   carousels: z.record(z.string(), CarouselConfigSchema).optional(),
   elements: z.record(z.string(), ElementConfigSchema).optional(),
   folders: FoldersConfigSchema.optional(),
+  page_types: z.record(z.string(), PageTypeConfigSchema).optional(),
 })
 
 export type LiteEditorConfig = z.infer<typeof LiteEditorConfigSchema>

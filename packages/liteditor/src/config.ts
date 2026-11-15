@@ -8,6 +8,10 @@ import type { Field, FieldMap } from './fields.ts'
 export interface ElementInput<F extends FieldMap = FieldMap> {
   label: string
   description?: string
+  /** Accent color of the block in the editor, `#RRGGBB`. */
+  color?: string
+  /** Icon in the editor: a Material icon name (e.g. `campaign`, `format_quote`) or a short text such as an emoji. */
+  icon?: string
   fields: F
   display?: {
     title?: Extract<keyof F, string>
@@ -33,6 +37,25 @@ export interface FoldersInput {
   max_depth?: number
 }
 
+export interface PageTypeInput<E extends string = string> {
+  label: string
+  description?: string
+  /** Folders (relative to `content_path`) pages of this type may live in. First is the default. */
+  folders?: string[]
+  /** May editors create subfolders under `folders` for this type? Default false when `folders` is set. */
+  allow_new_folders?: boolean
+  /** Maximum number of pages of this type per folder. */
+  max_pages_per_folder?: number
+  /** Allowed edit modes, first is the default. Default `['rich']`. */
+  modes?: Array<'rich' | 'block'>
+  /** Element keys usable on these pages. Default: all declared elements. */
+  elements?: E[]
+  /** Block mode only: allow Markdown text blocks between elements. Default false. */
+  markdown_block?: boolean
+  /** Extra frontmatter fields for pages of this type. */
+  frontmatter?: FieldMap
+}
+
 /** Same keys as the `.liteditor` file, so the generated file is a plain serialisation. */
 export interface ConfigInput<
   S extends FieldMap = FieldMap,
@@ -48,6 +71,8 @@ export interface ConfigInput<
   carousels?: C
   elements?: E
   folders?: FoldersInput
+  /** Page types editors choose from when creating a page; only declared element keys may be listed. */
+  page_types?: Record<string, PageTypeInput<Extract<keyof E, string>>>
 }
 
 /** Identity helper that keeps the literal field types so loaded data is typed. */
@@ -58,6 +83,11 @@ export function defineConfig<
   E extends Record<string, ElementInput<any>> = {},
 >(config: ConfigInput<S, F, C, E>): ConfigInput<S, F, C, E> {
   return config
+}
+
+/** Declares a page type; reference it from `page_types`. */
+export function definePageType<const T extends PageTypeInput>(pageType: T): T {
+  return pageType
 }
 
 /** Declares an element next to the component that renders it; reference it from `elements`. */
@@ -94,6 +124,7 @@ export function serializeConfig(config: ConfigInput<any, any, any, any> | LiteEd
     'carousels',
     'elements',
     'folders',
+    'page_types',
   ] as const
   const out: Record<string, unknown> = {}
   for (const key of known) {

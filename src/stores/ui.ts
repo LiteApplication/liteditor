@@ -23,6 +23,16 @@ export interface DialogOptions {
   danger?: boolean
 }
 
+export interface NewPageRequest {
+  /** Preselected content-relative folder ('' = root). */
+  folder: string
+}
+export interface NewPageResult {
+  type: string
+  name: string
+  folder: string
+}
+
 export const useUIStore = defineStore('ui', () => {
   const toasts = ref<Toast[]>([])
   const darkMode = ref(localStorage.getItem('liteditor_theme') !== 'light')
@@ -63,6 +73,20 @@ export const useUIStore = defineStore('ui', () => {
     return (await openDialog({ ...opts, kind: 'confirm' })) === true
   }
 
+  // New page dialog (shown when the site defines page types)
+  const newPageRequest = ref<NewPageRequest | null>(null)
+  let newPageResolve: ((v: NewPageResult | null) => void) | null = null
+  function chooseNewPage(req: NewPageRequest) {
+    newPageResolve?.(null)
+    newPageRequest.value = req
+    return new Promise<NewPageResult | null>((resolve) => { newPageResolve = resolve })
+  }
+  function closeNewPage(value: NewPageResult | null) {
+    newPageRequest.value = null
+    newPageResolve?.(value)
+    newPageResolve = null
+  }
+
   function closeDialog(value: string | boolean | null) {
     dialog.value = null
     dialogResolve?.(value)
@@ -87,6 +111,7 @@ export const useUIStore = defineStore('ui', () => {
   return {
     toasts, darkMode, commitDrawerOpen, assetsOpen, settingsOpen, locale,
     dialog, promptText, confirmAction, closeDialog,
+    newPageRequest, chooseNewPage, closeNewPage,
     addToast, removeToast, toggleDarkMode, toggleLocale,
   }
 })

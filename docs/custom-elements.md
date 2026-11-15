@@ -46,6 +46,8 @@ These are the keys of `defineElement`, and of each entry of `elements` in `.lite
 |---|---|---|
 | `label` | yes | Name shown in the element picker |
 | `description` | no | Help text for editors |
+| `color` | no | Accent color of the block in the editor, `#RRGGBB` |
+| `icon` | no | Icon of the block in the editor: the name of a [Material icon](https://fonts.google.com/icons) in lowercase with underscores (`image`, `format_quote`, `smart_display`, `campaign`...), or any other short text such as an emoji |
 | `fields` | yes | Field definitions, same types as `schema` and `frontmatter` (see [field types](field-types.md)) |
 | `display` | no | Which fields the editor card shows |
 
@@ -212,3 +214,7 @@ Both are reusable blocks, but they fit different jobs.
 See [carousels](carousels.md) for the carousel format.
 
 Next: [Deployment](deployment.md)
+
+### Block color and icon
+
+`color` and `icon` only change how the block looks in the editor (card border, label and icon). Icons come from the [Material Icons](https://fonts.google.com/icons) set (outlined style), bundled with LiteEditor. Use the icon's name exactly as listed on that page, in lowercase with underscores. A name that does not exist is shown as plain text, so check it in the editor. Any value that is not a plain lowercase name, such as an emoji, is displayed as text.

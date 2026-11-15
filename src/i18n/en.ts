@@ -47,6 +47,35 @@ export default {
     chooseRepo: "Choose another repository",
   },
 
+  pageType: {
+    title: "New page",
+    type: "Page type",
+    name: "Page name",
+    namePlaceholder: "Will be converted to lowercase-with-dashes.md",
+    folder: "Folder",
+    root: "(root)",
+    limitReached: "limit reached",
+    noFolder: "No folder available for this page type.",
+    moveLimit: "This folder already holds the maximum number of pages of this type ({max}).",
+    moveFolder: "Pages of this type cannot be placed in this folder.",
+    moveBlockedTitle: "Cannot move page",
+    modeRich: "Rich text",
+    modeBlock: "Blocks",
+  },
+
+  blocks: {
+    add: "Add a block",
+    addMarkdown: "Text",
+    markdown: "Text block",
+    lockedMarkdown: "Text not allowed for this page type. It is kept as is; you can only delete it.",
+    empty: "No blocks yet. Add one to start.",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    remove: "Remove",
+    switchWarn: "Text outside blocks will be locked in block mode. Continue?",
+    switchTitle: "Switch edit mode",
+  },
+
   // Editor header
   editor: {
     unsavedChanges: "Unsaved changes",

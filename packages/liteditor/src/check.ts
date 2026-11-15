@@ -5,6 +5,7 @@ import type { ConfigInput } from './config.ts'
 import { normalizeAssetPath } from './assets.ts'
 import { parseMarkdown } from './content.ts'
 import { splitBody } from './elements.ts'
+import { folderAllowed, pageModeOf, resolvePageType } from './page-types.ts'
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -101,11 +102,42 @@ export async function checkContent(config: ConfigInput<any, any, any, any>, root
     if (data) problems.push(...validateFields(config.schema, data, `${config.settings_file}: `, collector()))
   }
 
+  for (const [key, t] of Object.entries<any>(config.page_types ?? {})) {
+    for (const el of t.elements ?? [])
+      if (!config.elements?.[el]) problems.push(`page_types.${key}: element "${el}" is not declared in elements`)
+  }
+
+  const perFolder = new Map<string, number>()
+  const contentRoot = path.posix.normalize(config.content_path)
   for (const file of await markdownFiles(path.join(root, config.content_path))) {
     const repoFile = path.relative(root, file).split(path.sep).join('/')
     const { data, body } = parseMarkdown(await readFile(file, 'utf8'))
-    problems.push(...validateFields(config.frontmatter, data, `${repoFile}: frontmatter.`, collector(repoFile)))
+    const slug = repoFile.slice(contentRoot.length + 1).replace(/\.md$/, '')
+    const typeKey = resolvePageType(config, slug, data)
+    const type = typeKey ? config.page_types?.[typeKey] : undefined
+    const fields = { ...config.frontmatter, ...type?.frontmatter }
+    problems.push(...validateFields(fields, data, `${repoFile}: frontmatter.`, collector(repoFile)))
+    if (typeKey && type) {
+      const folder = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
+      if (!folderAllowed(type.folders, type.allow_new_folders, folder))
+        problems.push(`${repoFile}: page type "${typeKey}" is not allowed in folder "${folder || '/'}"`)
+      if (type.max_pages_per_folder !== undefined) {
+        const k = `${typeKey}\0${folder}`
+        const n = (perFolder.get(k) ?? 0) + 1
+        perFolder.set(k, n)
+        if (n === type.max_pages_per_folder + 1)
+          problems.push(`${repoFile}: more than ${type.max_pages_per_folder} "${typeKey}" pages in folder "${folder || '/'}"`)
+      }
+    }
     for (const block of splitBody(body)) {
+      if (!typeKey || !type) {
+        // no type: no restriction
+      } else if (block.type === 'markdown') {
+        if (pageModeOf(config, typeKey, data) === 'block' && !type.markdown_block && block.value.trim())
+          problems.push(`${repoFile}: Markdown text is not allowed in block pages of type "${typeKey}"`)
+      } else if (type.elements && !type.elements.includes(block.key)) {
+        problems.push(`${repoFile}: element "${block.key}" is not allowed on page type "${typeKey}"`)
+      }
       if (block.type !== 'element') continue
       const where = `${repoFile}: element ${block.key} #${block.rank + 1}`
       const def = config.elements?.[block.key]

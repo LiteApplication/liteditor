@@ -47,6 +47,35 @@ export default {
     chooseRepo: "Choisir un autre site",
   },
 
+  pageType: {
+    title: "Nouvelle page",
+    type: "Type de page",
+    name: "Nom de la page",
+    namePlaceholder: "Converti en minuscules-avec-tirets.md",
+    folder: "Dossier",
+    root: "(racine)",
+    limitReached: "limite atteinte",
+    noFolder: "Aucun dossier disponible pour ce type de page.",
+    moveLimit: "Ce dossier contient déjà le nombre maximum de pages de ce type ({max}).",
+    moveFolder: "Les pages de ce type ne peuvent pas être placées dans ce dossier.",
+    moveBlockedTitle: "Déplacement impossible",
+    modeRich: "Texte riche",
+    modeBlock: "Blocs",
+  },
+
+  blocks: {
+    add: "Ajouter un bloc",
+    addMarkdown: "Texte",
+    markdown: "Bloc de texte",
+    lockedMarkdown: "Le texte n'est pas autorisé pour ce type de page. Il est conservé tel quel ; vous pouvez seulement le supprimer.",
+    empty: "Aucun bloc. Ajoutez-en un pour commencer.",
+    moveUp: "Monter",
+    moveDown: "Descendre",
+    remove: "Supprimer",
+    switchWarn: "Le texte hors des blocs sera verrouillé en mode blocs. Continuer ?",
+    switchTitle: "Changer de mode d'édition",
+  },
+
   // Editor header
   editor: {
     unsavedChanges: "Modifications non sauvegardées",

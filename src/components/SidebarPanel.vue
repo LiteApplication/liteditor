@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRepoStore, type TreeNode } from '@/stores/repo'
 import { useUIStore } from '@/stores/ui'
 import { useGitHubImage } from '@/composables/useGitHubImage'
+import { useNewPage } from '@/composables/useNewPage'
 
 const { t } = useI18n()
 const repo = useRepoStore()
@@ -99,12 +100,19 @@ function toggleFolder(folder: string) {
   }
 }
 
-async function createNewPage(folder: string) {
-  const name = await ui.promptText({ title: t('dialog.newPage'), message: t('sidebar.newPagePrompt'), confirmLabel: t('dialog.create') })
-  if (!name) return
-  const contentPath = repo.config?.content_path ?? ''
-  const fullDir = folder === '/' ? contentPath : `${contentPath}/${folder}`
-  repo.createFile(fullDir, name)
+const { newPage } = useNewPage()
+function createNewPage(folder: string) {
+  void newPage(folder)
+}
+
+function showMoveBlocked(reason: 'folder' | 'limit', oldPath: string) {
+  const maxes = Object.values(repo.config?.page_types ?? {}).map((x) => x.max_pages_per_folder).filter((n): n is number => n !== undefined)
+  const max = repo.pageTypeOf(oldPath)?.type.max_pages_per_folder ?? (maxes.length ? Math.min(...maxes) : '')
+  ui.addToast({
+    type: 'error',
+    title: t('pageType.moveBlockedTitle'),
+    message: reason === 'limit' ? t('pageType.moveLimit', { max }) : t('pageType.moveFolder'),
+  })
 }
 
 async function createNewFolder() {
@@ -156,7 +164,9 @@ function onDrop(e: DragEvent, group: string) {
     const fileName = oldPath.split('/').pop()!
     const newPath = `${targetDir}/${fileName}`
     if (oldPath !== newPath) {
-      void repo.renameItem(oldPath, newPath, false)
+      void repo.renameItem(oldPath, newPath, false).then((r) => {
+        if (!r.ok) showMoveBlocked(r.reason, oldPath)
+      })
     }
   } else if (data.startsWith('folder:')) {
     const oldPath = data.substring(7)
@@ -170,7 +180,9 @@ function onDrop(e: DragEvent, group: string) {
         ui.addToast({ type: 'error', title: t('sidebar.folderTooDeepTitle'), message: t('sidebar.folderTooDeep', { max: repo.config?.folders?.max_depth }) })
         return
       }
-      void repo.renameItem(oldPath, newPath, true)
+      void repo.renameItem(oldPath, newPath, true).then((r) => {
+        if (!r.ok) showMoveBlocked(r.reason, oldPath)
+      })
     }
   }
 }
@@ -190,7 +202,9 @@ async function ctxRename() {
   if (!newName || newName === oldName) return
   const dir = path.split('/').slice(0, -1).join('/')
   const newPath = `${dir}/${newName}`
-  void repo.renameItem(path, newPath, isFolder)
+  void repo.renameItem(path, newPath, isFolder).then((r) => {
+    if (!r.ok) showMoveBlocked(r.reason, path)
+  })
 }
 function ctxDuplicate() {
   const { path, isFolder } = ctxMenu.value
@@ -429,7 +443,7 @@ async function ctxDeleteAsset() {
             {{ t('sidebar.content') }}
           </p>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-            <button @click="createNewPage('/')"
+            <button v-if="repo.canCreatePageIn('')" @click="createNewPage('/')"
               class="p-0.5 rounded-md transition-all duration-150 hover:bg-surface-200 dark:hover:bg-surface-700 hover:scale-110 active:scale-90"
               :title="t('sidebar.newRootPage')">
               <svg class="w-4 h-4" :class="ui.darkMode ? 'text-surface-400' : 'text-surface-500'" fill="none"
@@ -489,7 +503,7 @@ async function ctxDeleteAsset() {
               </span>
 
               <!-- Add page button -->
-              <button @click.stop="createNewPage(group)"
+              <button v-if="repo.canCreatePageIn(group === '/' ? '' : group)" @click.stop="createNewPage(group)"
                 class="opacity-0 group-hover:opacity-100 p-1 rounded-md transition-all duration-150 hover:bg-surface-200 dark:hover:bg-surface-700 hover:scale-110 active:scale-90"
                 :title="t('sidebar.newPage')">
                 <svg class="w-3.5 h-3.5" :class="ui.darkMode ? 'text-surface-300' : 'text-surface-600'" fill="none"

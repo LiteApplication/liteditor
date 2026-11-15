@@ -15,7 +15,7 @@
     "format": "oxfmt src/",
     "schema:check": "node scripts/check-schema.ts",
     "schema:test": "node --test scripts/schema-compat.test.ts",
-    "test": "node --test scripts/schema-compat.test.ts scripts/elements.test.ts",
+    "test": "node --test scripts/schema-compat.test.ts scripts/elements.test.ts scripts/blocks.test.ts",
     "release": "node scripts/release.ts"
   },
   "dependencies": {
@@ -41,6 +41,7 @@
     "js-yaml": "^5.5.0",
     "markdown-it-footnote": "^4.0.0",
     "marked": "^18.2.0",
+    "material-icons": "^1.13.14",
     "pinia": "^4.1.0",
     "tailwindcss": "^4.2.2",
     "tiptap-markdown": "^0.9.0",

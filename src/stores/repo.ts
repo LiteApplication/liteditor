@@ -9,6 +9,17 @@ import {
 import { b64decode, b64encode } from "@/utils/encoding";
 import { resolveRelativePath, computeRelativePath, adjustDocumentPaths, updateAssetReferences } from "@/utils/paths";
 import { parseFrontmatter, serializeFrontmatter } from "@/utils/frontmatter";
+import {
+  PAGE_MODE_KEY,
+  PAGE_TYPE_KEY,
+  allowedModes,
+  canCreateIn,
+  countInFolder,
+  folderAllowed,
+  folderOf,
+  resolvePageType,
+  type CreateCheck,
+} from "@/utils/pageTypes";
 
 // Re-export utilities that external components import directly from this module
 export { b64decode, b64encode, resolveRelativePath, computeRelativePath, adjustDocumentPaths, updateAssetReferences };
@@ -150,11 +161,58 @@ export const useRepoStore = defineStore("repo", () => {
     return factory(field);
   }
 
-  function createDefaultFrontmatter(): Record<string, unknown> {
-    const schema = config.value?.frontmatter ?? {};
+  function createDefaultFrontmatter(pageTypeKey?: string): Record<string, unknown> {
+    const type = pageTypeKey ? config.value?.page_types?.[pageTypeKey] : undefined;
+    const schema = { ...config.value?.frontmatter, ...type?.frontmatter };
     return Object.fromEntries(
       Object.entries(schema).map(([key, field]) => [key, getDefaultFieldValue(field)]),
     );
+  }
+
+  /** Content-relative path ("a/b.md") of a repo path, or null if outside content_path. */
+  function relContentPath(path: string): string | null {
+    const cp = config.value?.content_path ?? "";
+    return path.startsWith(cp + "/") ? path.slice(cp.length + 1) : null;
+  }
+
+  /** All known pages with the frontmatter we have (staged only), relative to content_path. */
+  function pageList(exclude?: string) {
+    const out: { relPath: string; frontmatter?: Record<string, unknown> }[] = [];
+    for (const n of fileTree.value) {
+      if (n.path === exclude || stagedDeletions.value.has(n.path)) continue;
+      const rel = relContentPath(n.path);
+      if (rel) out.push({ relPath: rel, frontmatter: stagedFiles.value.get(n.path)?.frontmatter });
+    }
+    return out;
+  }
+
+  /** Page type (key + config) of a page given its repo path. */
+  function pageTypeOf(path: string) {
+    const rel = relContentPath(path);
+    if (rel === null) return null;
+    return resolvePageType(config.value, rel, stagedFiles.value.get(path)?.frontmatter ?? {});
+  }
+
+  /** Whether a page of type `key` may be created in a content-relative folder ('' = root). */
+  function checkCreate(key: string, folder: string): CreateCheck {
+    if (!config.value) return { ok: true };
+    return canCreateIn(config.value, key, folder, pageList());
+  }
+
+  /** Whether any page type (or none configured) allows creating a page in this folder. */
+  function canCreatePageIn(folder: string): boolean {
+    const types = config.value?.page_types;
+    if (!types || Object.keys(types).length === 0) return true;
+    return Object.keys(types).some((k) => checkCreate(k, folder).ok);
+  }
+
+  /** Checks that moving a page to `newPath` respects its type's folder and count rules. */
+  function checkMove(oldPath: string, newPath: string): CreateCheck {
+    const type = pageTypeOf(oldPath);
+    const rel = relContentPath(newPath);
+    if (!type || rel === null || !config.value) return { ok: true };
+    if (folderOf(relContentPath(oldPath) ?? "") === folderOf(rel)) return { ok: true };
+    return canCreateIn(config.value, type.key, folderOf(rel), pageList(oldPath));
   }
 
   async function fetchRepos() {
@@ -395,8 +453,12 @@ export const useRepoStore = defineStore("repo", () => {
     }
   }
 
-  function createFile(dirPath: string, fileName: string) {
+  function createFile(dirPath: string, fileName: string, pageTypeKey?: string) {
     if (!selectedRepo.value) return;
+    if (pageTypeKey) {
+      const rel = relContentPath(`${dirPath}/x`) ?? "";
+      if (!checkCreate(pageTypeKey, folderOf(rel)).ok) return;
+    }
     const sanitizedName = fileName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -411,7 +473,12 @@ export const useRepoStore = defineStore("repo", () => {
     }
 
     const newNode: TreeNode = { path: fullPath, name: sanitizedName, type: "file" };
-    const defaultFrontmatter = createDefaultFrontmatter();
+    const defaultFrontmatter = createDefaultFrontmatter(pageTypeKey);
+    if (pageTypeKey) {
+      defaultFrontmatter[PAGE_TYPE_KEY] = pageTypeKey;
+      const modes = allowedModes(config.value?.page_types?.[pageTypeKey]);
+      if (modes.length > 1) defaultFrontmatter[PAGE_MODE_KEY] = modes[0];
+    }
     fileTree.value.push(newNode);
     stagedFiles.value.set(fullPath, {
       path: fullPath,
@@ -690,8 +757,41 @@ export const useRepoStore = defineStore("repo", () => {
     stagedFiles.value = new Map(stagedFiles.value);
   }
 
-  async function renameItem(oldPath: string, newPath: string, isFolder: boolean) {
-    if (fileTree.value.some((f) => f.path === newPath)) return; // Conflict
+  /** Checks that moving a content folder keeps every typed page within its type's folder and count rules. */
+  function checkFolderMove(oldPath: string, newPath: string): CreateCheck {
+    const cfg = config.value;
+    if (!cfg?.page_types) return { ok: true };
+    const prefix = oldPath + "/";
+    const moving = fileTree.value.filter((f) => f.path.startsWith(prefix));
+    const movingPaths = new Set(moving.map((f) => f.path));
+    const others = pageList().filter((p) => !movingPaths.has(`${cfg.content_path}/${p.relPath}`));
+    const added = new Map<string, number>();
+    for (const f of moving) {
+      const type = pageTypeOf(f.path);
+      const np = f.path.replace(prefix, newPath + "/");
+      const rel = relContentPath(np);
+      if (!type || rel === null) continue;
+      const folder = folderOf(rel);
+      const t = type.type;
+      if (!folderAllowed(t, folder)) return { ok: false, reason: "folder" };
+      if (t.max_pages_per_folder !== undefined) {
+        const k = `${type.key}\0${folder}`;
+        const n = (added.get(k) ?? countInFolder(cfg, type.key, folder, others)) + 1;
+        added.set(k, n);
+        if (n > t.max_pages_per_folder) return { ok: false, reason: "limit" };
+      }
+    }
+    return { ok: true };
+  }
+
+  async function renameItem(
+    oldPath: string,
+    newPath: string,
+    isFolder: boolean,
+  ): Promise<CreateCheck> {
+    if (fileTree.value.some((f) => f.path === newPath)) return { ok: true }; // Conflict, nothing done
+    const check = isFolder ? checkFolderMove(oldPath, newPath) : checkMove(oldPath, newPath);
+    if (!check.ok) return check;
     if (isFolder) {
       const prefix = oldPath + "/";
       const newPrefix = newPath + "/";
@@ -772,6 +872,7 @@ export const useRepoStore = defineStore("repo", () => {
     }
     stagedFiles.value = new Map(stagedFiles.value);
     fileTree.value = [...fileTree.value];
+    return { ok: true };
   }
 
   async function openFile(node: TreeNode) {
@@ -1106,6 +1207,10 @@ export const useRepoStore = defineStore("repo", () => {
     updateCarouselMeta,
     createAssetFolder,
     canCreateFolders,
+    pageTypeOf,
+    checkCreate,
+    canCreatePageIn,
+    checkMove,
     folderDepthAllowed,
     contentSubtreeHeight,
     uploadAsset,

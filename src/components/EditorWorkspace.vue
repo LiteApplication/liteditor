@@ -19,6 +19,10 @@ import FrontmatterPanel from './FrontmatterPanel.vue'
 import AssetPickerModal from './AssetPickerModal.vue'
 import GitHubImageView from './GitHubImageView.vue'
 import { ElementNode } from './elementExtension'
+import { useNewPage } from '@/composables/useNewPage'
+import BlockEditor from './BlockEditor.vue'
+import { parseBlocks } from '@/utils/blocks'
+import { allowedElements, allowedModes, resolveMode, PAGE_MODE_KEY } from '@/utils/pageTypes'
 
 const { t } = useI18n()
 const repo = useRepoStore()
@@ -34,7 +38,23 @@ const imageCaption = ref('')
 const pickedAssetPath = ref<string>('')
 
 const hasFrontmatterSchema = computed(() => Object.keys(repo.config?.frontmatter ?? {}).length > 0)
-const elementEntries = computed(() => Object.entries(repo.config?.elements ?? {}))
+const pageType = computed(() => (repo.activeFile ? repo.pageTypeOf(repo.activeFile.path) : null))
+const modes = computed(() => allowedModes(pageType.value?.type))
+const mode = computed(() => resolveMode(pageType.value?.type, repo.activeFile?.frontmatter ?? {}))
+const permittedElements = computed(() => allowedElements(repo.config, pageType.value?.type))
+const elementEntries = computed(() =>
+  Object.entries(repo.config?.elements ?? {}).filter(([k]) => permittedElements.value.includes(k)),
+)
+
+async function setMode(next: 'rich' | 'block') {
+  const file = repo.activeFile
+  if (!file || next === mode.value) return
+  if (next === 'block' && !pageType.value?.type.markdown_block) {
+    const hasText = parseBlocks(file.content).some((b) => b.kind === 'markdown')
+    if (hasText && !(await ui.confirmAction({ title: t('blocks.switchTitle'), message: t('blocks.switchWarn') }))) return
+  }
+  repo.updateFrontmatter(file.path, PAGE_MODE_KEY, next)
+}
 function insertElement(name: string) {
   if (!name) return
   editor.value?.chain().focus().insertContent({ type: 'liteElement', attrs: { name, data: {} } }).run()
@@ -101,6 +121,16 @@ watch(
   },
   { immediate: true },
 )
+
+watch(mode, async (m) => {
+  if (m !== 'rich' || !editor.value || !repo.activeFile) return
+  const content = repo.activeFile.content
+  await nextTick()
+  _settingContent = true
+  editor.value.commands.setContent(content)
+  await nextTick()
+  _settingContent = false
+})
 
 // Rebuild editor theme on dark mode toggle — preserve markdown, don't mark dirty
 watch(() => ui.darkMode, async () => {
@@ -201,12 +231,9 @@ function openArticle(nodePath: string) {
   ui.settingsOpen = false
 }
 
+const { newPage } = useNewPage()
 async function createArticle() {
-  const contentPath = repo.config?.content_path ?? ''
-  const name = await ui.promptText({ title: t('dialog.newArticle'), message: t('workspace.newArticlePrompt'), confirmLabel: t('dialog.create') })
-  if (!name) return
-  repo.createFile(contentPath, name)
-  ui.settingsOpen = false
+  if (await newPage('/')) ui.settingsOpen = false
 }
 </script>
 
@@ -362,8 +389,17 @@ async function createArticle() {
       <!-- Left: toolbar + editor -->
       <div class="flex-1 flex flex-col overflow-hidden">
 
+        <!-- Mode switch (only when the page type allows several modes) -->
+        <div v-if="modes.length > 1" class="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 border-b"
+          :class="ui.darkMode ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'">
+          <button v-for="m in modes" :key="m" type="button" @click="setMode(m)"
+            :class="['toolbar-btn text-xs px-2', mode === m ? 'toolbar-btn-active' : '']">
+            {{ m === 'rich' ? t('pageType.modeRich') : t('pageType.modeBlock') }}
+          </button>
+        </div>
+
         <!-- ── Toolbar ─────────────────────────────────────────────────── -->
-        <div class="flex-shrink-0 flex items-center gap-0.5 px-3 py-1.5 border-b flex-wrap"
+        <div v-if="mode === 'rich'" class="flex-shrink-0 flex items-center gap-0.5 px-3 py-1.5 border-b flex-wrap"
           :class="ui.darkMode ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'">
 
           <!-- Heading selector -->
@@ -511,7 +547,9 @@ async function createArticle() {
         </div>
 
         <!-- ── Word-style editor page ──────────────────────────────────── -->
-        <div class="flex-1 overflow-auto py-10 px-6" :class="ui.darkMode ? 'bg-surface-950' : 'bg-surface-100'">
+        <BlockEditor v-if="mode === 'block' && repo.activeFile" :key="repo.activeFile.path"
+          :allowed="permittedElements" :markdown-allowed="pageType?.type.markdown_block === true" />
+        <div v-else class="flex-1 overflow-auto py-10 px-6" :class="ui.darkMode ? 'bg-surface-950' : 'bg-surface-100'">
           <div class="max-w-3xl mx-auto min-h-full rounded-sm shadow-xl"
             :class="ui.darkMode ? 'bg-[#1e1e2e]' : 'bg-white'" style="padding: 60px 80px;">
             <EditorContent :editor="editor" />

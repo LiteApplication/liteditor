@@ -6,6 +6,7 @@ import type { FieldsOf } from './fields.ts'
 import { applyDefaults } from './defaults.ts'
 import { normalizeAssetPath } from './assets.ts'
 import { parseMarkdown } from './content.ts'
+import { pageModeOf, resolvePageType, type PageMode } from './page-types.ts'
 import { splitBody, type ElementBlock, type MarkdownBlock } from './elements.ts'
 
 type AnyConfig = ConfigInput<any, any, any, any>
@@ -38,6 +39,10 @@ export type Page<C extends AnyConfig> = {
   body: string
   /** Body split into Markdown text and element blocks, in order. */
   blocks: SiteBlock<C>[]
+  /** Key of the page type (`page_types`), if the page has one. */
+  type: string | undefined
+  /** `block` pages are made only of element blocks (plus Markdown blocks if their type allows it). */
+  mode: PageMode
 }
 
 export type Carousel<C extends AnyConfig, K extends keyof NonNullable<C['carousels']>> = {
@@ -138,12 +143,17 @@ export function createSite<C extends AnyConfig>(config: C, options: SiteOptions 
       const repoFile = toPosix(path.relative(root, file))
       const { data, body } = parseMarkdown(await readFile(file, 'utf8'))
       const contentRoot = toPosix(path.normalize(config.content_path))
+      const slug = repoFile.slice(contentRoot.length + 1).replace(/\.md$/, '')
+      const type = resolvePageType(config, slug, data)
+      const fields = { ...config.frontmatter, ...(type ? config.page_types?.[type]?.frontmatter : undefined) }
       return {
-        slug: repoFile.slice(contentRoot.length + 1).replace(/\.md$/, ''),
+        slug,
         file: repoFile,
-        data: applyDefaults(config.frontmatter, data, { file: repoFile, mapImage }) as Page<C>['data'],
+        data: applyDefaults(fields, data, { file: repoFile, mapImage }) as Page<C>['data'],
         body,
         blocks: parseBody(body, repoFile),
+        type,
+        mode: pageModeOf(config, type, data),
       }
     },
 
