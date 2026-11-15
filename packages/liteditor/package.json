@@ -1,6 +1,6 @@
 {
   "name": "liteditor",
-  "version": "0.1.2",
+  "version": "0.3.0",
   "description": "Build-time content loader and config generator for websites edited with LiteEditor",
   "keywords": [
     "liteditor",
