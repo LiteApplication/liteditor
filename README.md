@@ -71,7 +71,7 @@ faq: f.list('FAQ', f.object('Question', {
 ```sh
 npx liteditor generate           # write .liteditor (commit it: LiteEditor reads it from GitHub)
 npx liteditor generate --check   # CI: fail if the committed file is stale
-npx liteditor check              # validate the config and all content (types, selections, images, unknown elements)
+npx liteditor check              # validate the config and all content (types, selections, images, unknown elements, page type rules)
 ```
 
 Do not edit `.liteditor`: change `liteditor.config.ts` and run `generate` again. Add the two checks to the build step of your deploy workflow (`init` does it for you). A bad content edit then fails the build with the file and field, instead of breaking the published site.
@@ -118,7 +118,7 @@ export const slider = defineElement({
 })
 ```
 
-then add it to the config with `elements: { slider }`. In the Markdown, the editor writes an instance as a fenced `liteditor-element:<key>` block containing YAML: you never need to write or parse it yourself.
+Add `color` (`#RRGGBB`) and `icon` (a [Material icon](https://fonts.google.com/icons) name such as `view_carousel`, or an emoji) to change how the block looks in the editor. Then add it to the config with `elements: { slider }`. In the Markdown, the editor writes an instance as a fenced `liteditor-element:<key>` block containing YAML: you never need to write or parse it yourself.
 
 **Using `blocks`** (Astro, Svelte, any templating): each page body is split into text and elements, whose `data` is typed from `fields`.
 
@@ -145,6 +145,32 @@ unified().use(remarkParse).use(remarkLiteditorElements, {
 ```
 
 A renderer returns mdast nodes or a string (raw HTML, which you must escape). Unknown keys and invalid YAML stay visible as code blocks, and `npx liteditor check` reports them in CI. See [custom elements](docs/custom-elements.md).
+
+### 6. Page types and block mode
+
+Page types let editors choose a kind of page when they create one, and let you restrict where it goes, how many there can be, and how it is edited:
+
+```ts
+import { defineConfig, definePageType } from 'liteditor'
+
+export default defineConfig({
+  // ...
+  elements: { hero, features },
+  page_types: {
+    post: definePageType({ label: 'Blog post', folders: ['blog'] }),
+    landing: definePageType({
+      label: 'Landing page',
+      folders: ['landing'],
+      max_pages_per_folder: 5,
+      modes: ['block'],            // no text editor: editors only stack elements
+      elements: ['hero', 'features'],
+      markdown_block: false,       // true allows free text blocks between elements
+    }),
+  },
+})
+```
+
+In **block mode** the page is only a list of element blocks, so for a type without `markdown_block` you can rely on the page containing no Markdown text. Each page from `site.page()` has `type` and `mode`, and `blocks` gives the ordered blocks to render. `npx liteditor check` reports pages that break their type's folder, limit, element or text rules. See [page types](docs/page-types.md).
 
 ### What LiteEditor does to the repository
 
