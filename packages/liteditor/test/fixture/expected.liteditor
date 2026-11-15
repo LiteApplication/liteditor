@@ -1,0 +1,89 @@
+{
+  "content_path": "src/content/blog",
+  "assets_path": "src/assets/images",
+  "settings_file": "src/data/site.json",
+  "schema": {
+    "announcement": {
+      "label": "Banner text",
+      "type": "short-text"
+    },
+    "showBanner": {
+      "label": "Show banner",
+      "type": "boolean"
+    }
+  },
+  "frontmatter": {
+    "title": {
+      "label": "Title",
+      "type": "short-text"
+    },
+    "description": {
+      "label": "Summary",
+      "type": "long-text"
+    },
+    "published": {
+      "label": "Published",
+      "type": "boolean"
+    },
+    "cover": {
+      "label": "Cover image",
+      "type": "image"
+    },
+    "accentColor": {
+      "label": "Accent color",
+      "type": "color"
+    }
+  },
+  "carousels": {
+    "homeHero": {
+      "label": "Home hero",
+      "description": "Slides shown at the top of the home page.",
+      "path": "src/assets/carousels/home-hero",
+      "schema": {
+        "alt": {
+          "label": "Alt text",
+          "type": "short-text"
+        },
+        "link": {
+          "label": "Link",
+          "type": "link"
+        }
+      },
+      "frontmatter": {
+        "autoplay": {
+          "label": "Autoplay",
+          "type": "boolean"
+        },
+        "interval": {
+          "label": "Interval (ms)",
+          "type": "short-text"
+        }
+      }
+    }
+  },
+  "elements": {
+    "callout": {
+      "label": "Callout",
+      "description": "Highlighted box with a heading, text and an optional photo.",
+      "fields": {
+        "heading": {
+          "label": "Heading",
+          "type": "short-text"
+        },
+        "text": {
+          "label": "Text",
+          "type": "long-text"
+        },
+        "photo": {
+          "label": "Photo",
+          "type": "image"
+        }
+      },
+      "display": {
+        "title": "heading",
+        "description": "text",
+        "images": "photo"
+      }
+    }
+  }
+}

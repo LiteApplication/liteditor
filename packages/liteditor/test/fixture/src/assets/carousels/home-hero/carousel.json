@@ -1,0 +1,8 @@
+{
+  "images": [
+    { "src": "src/assets/carousels/home-hero/slide1.jpg", "alt": "Mountain lake at dawn", "link": "/products" },
+    { "src": "src/assets/carousels/home-hero/slide2.jpg", "alt": "Autumn forest path" }
+  ],
+  "autoplay": true,
+  "interval": "4000"
+}

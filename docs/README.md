@@ -24,6 +24,7 @@ Key points:
 11. [Examples](examples.md): complete worked configurations.
 12. [Design guidelines](design-guidelines.md): what to make editable, and common mistakes.
 13. [Schema compatibility](schema-compatibility.md): how config files stay valid across LiteEditor releases.
+14. [The `liteditor` npm package](kit.md): load content at build time and generate `.liteditor` from code.
 
 Start with steps 1 and 2 if you are setting up a site. If you only operate a LiteEditor instance, go to [Hosting LiteEditor](hosting-liteditor.md).
 
