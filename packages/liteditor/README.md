@@ -167,4 +167,4 @@ The package bundles the editor's own config schema (`src/types/schema.ts`), so i
 
 1. Bump `version` in `packages/liteditor/package.json` and commit.
 2. `git tag liteditor-v<version> && git push origin liteditor-v<version>`.
-3. `.github/workflows/liteditor-package.yml` tests, checks that the tag matches the version, and publishes to npm with provenance. It needs an `NPM_TOKEN` repository secret (an automation token for the `liteditor` package).
+3. `.github/workflows/liteditor-package.yml` tests, checks that the tag matches the version, and publishes to npm with provenance. It uses npm trusted publishing (no token): the package's Trusted Publisher setting on npmjs.com must name this repository and `liteditor-package.yml`.
