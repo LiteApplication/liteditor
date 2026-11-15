@@ -50,7 +50,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/liteditor-v')
     needs: test
     runs-on: ubuntu-latest
-    environment: github-ci # must match the environment set in npm's Trusted Publisher config
     permissions:
       contents: read
       id-token: write # npm provenance
