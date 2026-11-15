@@ -1,6 +1,6 @@
 # The `liteditor` npm package
 
-Every example in these docs hand-writes the same glue: a frontmatter parser, default values, JSON imports with fallbacks, a remark plugin for elements. The [`liteditor`](../packages/liteditor/README.md) npm package does it for you, at build time:
+These docs use the [`liteditor`](../packages/liteditor/README.md) npm package throughout, so you do not write `.liteditor` by hand or the glue code around it: a frontmatter parser, default values, JSON imports with fallbacks, a remark plugin for elements. It works at build time:
 
 ```sh
 npm install liteditor
@@ -16,7 +16,13 @@ const pages = await site.pages()              // frontmatter + body + element bl
 const hero = await site.carousel('homeHero')  // never throws on a missing carousel.json
 ```
 
-It can also generate the `.liteditor` file from a typed `liteditor.config.ts`, so field definitions and the types of the loaded data come from one place, and `npx liteditor check` validates all content in CI.
+You describe the site once in `liteditor.config.ts`, and:
+
+- `npx liteditor generate` writes the `.liteditor` file LiteEditor reads (commit it; `generate --check` fails CI when it is stale),
+- `createSite` loads settings, pages, carousels and elements with the same types and defaults,
+- `npx liteditor check` validates the config and all content in CI.
+
+If you prefer a hand-written `.liteditor`, delete `liteditor.config.ts`: the loaders read it as is, but data is not typed.
 
 Full guide: [packages/liteditor/README.md](../packages/liteditor/README.md).
 

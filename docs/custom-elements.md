@@ -1,33 +1,46 @@
 # Custom elements
 
-Custom elements are reusable blocks that editors insert into a Markdown page body, such as a slider, a promo box or a callout. Each element type is declared once in `.liteditor` under `elements`, and each instance is stored in the page as a fenced block with YAML data.
+Custom elements are reusable blocks that editors insert into a Markdown page body, such as a slider, a promo box or a callout. Each element type is declared once under `elements` (in `liteditor.config.ts`, generated into `.liteditor`), and each instance is stored in the page as a fenced block with YAML data.
 
-Your site must render these blocks at build time. LiteEditor only writes the Markdown; it does not render anything on the site.
+Your site must render these blocks at build time. LiteEditor only writes the Markdown; it does not render anything on the site. The [`liteditor` package](kit.md) does the parsing for you, so you only write the rendering.
 
 ## 1. Declare the element
 
-Add an `elements` key to `.liteditor`:
+Declare the element next to the component that renders it, and add it to `elements`:
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets",
-  "elements": {
-    "slider": {
-      "label": "Slider",
-      "description": "Image slider with a heading and text",
-      "fields": {
-        "heading": { "type": "short-text", "label": "Titre" },
-        "text": { "type": "long-text", "label": "Description" },
-        "pics": { "type": "list", "label": "Images", "itemSchema": { "type": "image" } }
-      },
-      "display": { "title": "heading", "description": "text", "images": "pics" }
-    }
-  }
-}
+```ts
+// src/elements/slider.ts
+import { defineElement, f } from 'liteditor'
+
+export const slider = defineElement({
+  label: 'Slider',
+  description: 'Image slider with a heading and text',
+  fields: {
+    heading: f.text('Titre'),
+    text: f.longText('Description'),
+    pics: f.list('Images', f.image('Image')),
+  },
+  display: { title: 'heading', description: 'text', images: 'pics' },
+})
 ```
 
+```ts
+// liteditor.config.ts
+import { defineConfig } from 'liteditor'
+import { slider } from './src/elements/slider'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  elements: { slider },
+})
+```
+
+`npx liteditor generate` writes the matching `elements` entry in `.liteditor`. `data` in your renderers is then typed from `fields`.
+
 ### Element properties
+
+These are the keys of `defineElement`, and of each entry of `elements` in `.liteditor`.
 
 | Property | Required | Meaning |
 |---|---|---|
@@ -43,13 +56,13 @@ All keys are optional. The schema checks them against `fields` when the config l
 - `display.title` and `display.description` must name a text field: `short-text`, `long-text` or `link`. A field without `type` counts as `short-text`.
 - `display.images` must name an `image` field, or a `list` whose `itemSchema` has `"type": "image"`. The `itemSchema.type` must be written explicitly.
 
-If the config breaks these rules, validation fails with the message `display.title/description must name a text field and display.images an image (or list of image) field of the element`.
+If the config breaks these rules, `npx liteditor check` and the editor fail with the message `display.title/description must name a text field and display.images an image (or list of image) field of the element`.
 
 Without `display`, the editor card shows the element `label`. The label is also shown when the instance has no title, description or images to display.
 
 ## 2. Use the element in a page
 
-In the Markdown body, write a fenced block whose info string is `liteditor-element:<key>` and whose content is YAML:
+Editors insert elements from the editor, which writes the block for you. If you add one by hand (for example in a test page), write a fenced block whose info string is `liteditor-element:<key>` and whose content is YAML:
 
 ````markdown
 ```liteditor-element:slider
@@ -69,99 +82,72 @@ Rules:
 
 ## 3. Render it on the site
 
-The build must turn the block into HTML. Without a plugin, the site shows the raw YAML as a code block.
+Do not parse the fences yourself. The `liteditor` package gives you two ways to do it. Without a renderer, the site shows the raw YAML as a code block. Unknown keys and invalid YAML are never dropped: they stay visible, and `npx liteditor check` reports them in CI.
 
-### Option A: remark (unified, Astro, Next.js with MDX-style pipelines)
+### Option A: `blocks` (Astro, Svelte, any templating)
 
-Install the helpers:
+`site.page()` splits each body in order into Markdown text and elements. `data` is typed from `fields`, with defaults applied and image paths normalised to repo-relative:
 
-```sh
-npm install js-yaml unist-util-visit
+```ts
+import { loadConfig, createSite } from 'liteditor'
+
+const site = createSite((await loadConfig()).config)
+const page = await site.page('summer-sale')
 ```
 
-`remark-liteditor-elements.js`:
-
-```js
-import yaml from 'js-yaml'
-import { visit } from 'unist-util-visit'
-
-const PREFIX = 'liteditor-element:'
-
-// One renderer per element key. Return Markdown (mdast) nodes so that
-// images go through the same path handling as normal Markdown images.
-const renderers = {
-  slider(d) {
-    return [
-      { type: 'heading', depth: 2, children: [{ type: 'text', value: d.heading ?? '' }] },
-      { type: 'paragraph', children: [{ type: 'text', value: d.text ?? '' }] },
-      ...(d.pics ?? []).map((url) => ({
-        type: 'paragraph',
-        children: [{ type: 'image', url, alt: '' }],
-      })),
-    ]
-  },
-}
-
-export default function remarkLiteditorElements() {
-  return (tree) => {
-    visit(tree, 'code', (node, index, parent) => {
-      if (!node.lang?.startsWith(PREFIX) || index === undefined) return
-      const render = renderers[node.lang.slice(PREFIX.length).trim()]
-      if (!render) return
-      const data = yaml.load(node.value) ?? {}
-      parent.children.splice(index, 1, ...render(data))
-    })
-  }
-}
+```astro
+{page.blocks.map((b) =>
+  b.type === 'markdown' ? <Fragment set:html={render(b.value)} />
+  : b.type === 'element' && b.key === 'slider' ? <Slider {...b.data} rank={b.rank} />
+  : b.type === 'unknown-element' ? <pre>{b.raw}</pre>
+  : null)}
 ```
 
-Use it in your processor:
+Block types: `markdown` (`value`), `element` (`key`, `data`, `rank`) and `unknown-element` (`key`, `raw`, `error`). For a body that is not a page, use `site.elements(body)`.
+
+### Option B: remark (unified, Astro, MDX-style pipelines)
+
+The body stays one Markdown document. `liteditor/remark` replaces each fence with the output of your renderer for its key:
 
 ```js
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
-import remarkLiteditorElements from './remark-liteditor-elements.js'
+import { remarkLiteditorElements } from 'liteditor/remark'
+
+const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 const html = await unified()
   .use(remarkParse)
-  .use(remarkLiteditorElements)
-  .use(remarkRehype)
-  .use(rehypeStringify)
+  .use(remarkLiteditorElements, {
+    renderers: {
+      // Return mdast nodes so images go through the normal image pipeline...
+      slider: (d) => [
+        { type: 'heading', depth: 2, children: [{ type: 'text', value: d.heading ?? '' }] },
+        { type: 'paragraph', children: [{ type: 'text', value: d.text ?? '' }] },
+        ...(d.pics ?? []).map((url) => ({
+          type: 'paragraph',
+          children: [{ type: 'image', url, alt: '' }],
+        })),
+      ],
+      // ...or a string, which is inserted as raw HTML.
+      callout: (d) => `<aside class="callout"><h2>${esc(d.heading)}</h2></aside>`,
+    },
+    onUnknown: (key, reason) => console.warn(`liteditor-element:${key} ${reason}`),
+  })
+  .use(remarkRehype, { allowDangerousHtml: true })
+  .use(rehypeStringify, { allowDangerousHtml: true })
   .process(markdown)
 ```
 
-### Option B: markdown-it
-
-```js
-import MarkdownIt from 'markdown-it'
-import yaml from 'js-yaml'
-
-const PREFIX = 'liteditor-element:'
-const md = new MarkdownIt()
-const defaultFence = md.renderer.rules.fence
-const esc = md.utils.escapeHtml
-
-md.renderer.rules.fence = (tokens, idx, options, env, self) => {
-  const token = tokens[idx]
-  const info = token.info.trim()
-  if (!info.startsWith(PREFIX)) return defaultFence(tokens, idx, options, env, self)
-
-  const name = info.slice(PREFIX.length).trim()
-  const data = yaml.load(token.content) ?? {}
-  if (name !== 'slider') return `<pre><code>${esc(token.content)}</code></pre>\n`
-
-  const pics = (data.pics ?? []).map((src) => `<img src="${esc(src)}" alt="">`).join('')
-  return `<section class="lite-slider"><h2>${esc(data.heading ?? '')}</h2><p>${esc(data.text ?? '')}</p>${pics}</section>\n`
-}
-```
+A renderer receives `(data, { key, rank })`. `rank` is the position among elements of the same key in the document, starting at 0. The plugin also visits elements nested in blockquotes and lists.
 
 Notes for both options:
 
 - Always escape values written into HTML.
-- Unknown element keys should fall back to something visible, as the markdown-it example does for unknown names. Do not drop them silently.
-- Raw `<img src>` tags written by hand are not processed by bundlers such as Vite or Astro. If you use markdown-it, resolve the image paths yourself, or use the remark version, which lets the normal image pipeline handle them.
+- Raw `<img src>` tags are not processed by bundlers such as Vite or Astro. Return mdast image nodes (remark), or use `blocks` with `assetUrl`.
+- Writing your own plugin with `js-yaml` still works, but then you also have to handle defaults, ranks, unknown keys and broken YAML.
 
 ## Practical notes for renderers
 
@@ -169,29 +155,23 @@ Lessons from real sites; none of this is enforced by LiteEditor.
 
 ### Several instances per page, no page per instance
 
-Each `liteditor-element:<key>` block is independent, so one page can hold any number of the same element (for example ten sliders, one per artwork). Do not create one page per slider. If the layout depends on the position (alternating left/right sections, "first two get priority"), count the instances of each key while you visit the tree and pass that rank to the renderer:
+Each `liteditor-element:<key>` block is independent, so one page can hold any number of the same element (for example ten sliders, one per artwork). Do not create one page per slider. If the layout depends on the position (alternating left/right sections, "first two get priority"), use the `rank` the package gives you: it is `b.rank` on a block, and the second argument of a remark renderer.
 
 ```js
-const counts = {}
-visit(tree, 'code', (node, i, parent) => {
-  const key = node.lang.slice(PREFIX.length).trim()
-  const rank = (counts[key] = (counts[key] ?? -1) + 1) // 0 for the first of its kind
-  // render(data, rank)
-})
+renderers: {
+  slider: (d, { rank }) => `<section class="slider ${rank % 2 ? 'right' : 'left'}">…</section>`,
+}
 ```
 
 ### Returning raw HTML
 
-The remark example above returns mdast nodes. When the markup needs wrappers, classes or attributes that mdast cannot express, replace the node with an `html` node instead:
+A remark renderer can return mdast nodes or a string. When the markup needs wrappers, classes or attributes that mdast cannot express, return a string: it is inserted as raw HTML.
 
 ```js
-node.type = 'html'
-node.value = '<div class="slider">…</div>'
-delete node.lang
-delete node.meta
+slider: (d) => `<div class="slider">…</div>`
 ```
 
-Resolve image paths yourself in that case, because a raw `<img>` is not processed by Vite or Astro (see the notes above). Remember the site `base` path when generating URLs, and escape every value.
+A raw `<img>` is not processed by Vite or Astro (see the notes above). With `blocks`, image paths are already repo-relative and `assetUrl` in `createSite` maps them, including the site `base` path. In a remark renderer they are as written in the page (relative to the file), so resolve them yourself. Escape every value.
 
 ### Interactive elements with client-side navigation
 

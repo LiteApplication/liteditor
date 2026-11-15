@@ -7,36 +7,28 @@ Two keys in `.liteditor` control it:
 - `settings_file`: repo-relative path of the JSON file.
 - `schema`: the fields shown in the General settings panel.
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets",
-  "settings_file": "src/data/site.json",
-  "schema": {
-    "theme": {
-      "label": "Theme",
-      "type": "selection",
-      "options": [
-        { "label": "Light", "value": "light" },
-        { "label": "Dark", "value": "dark" }
-      ]
-    },
-    "featuredLinks": {
-      "label": "Featured links",
-      "type": "list",
-      "itemSchema": {
-        "label": "Link",
-        "type": "object",
-        "fields": {
-          "label": { "label": "Text", "type": "short-text" },
-          "url": { "label": "URL", "type": "link" }
-        }
-      },
-      "max": 5
-    }
-  }
-}
+```ts
+// liteditor.config.ts
+import { defineConfig, f } from 'liteditor'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  settings_file: 'src/data/site.json',
+  schema: {
+    theme: f.select('Theme', [
+      { value: 'light', label: 'Light' },
+      { value: 'dark', label: 'Dark' },
+    ]),
+    featuredLinks: f.list('Featured links', f.object('Link', {
+      label: f.text('Text'),
+      url: f.link('URL'),
+    }), { max: 5 }),
+  },
+})
 ```
+
+`npx liteditor generate` writes the matching `.liteditor` (see [Configuration](configuration.md)).
 
 Field types are described in [field-types.md](field-types.md).
 
@@ -64,31 +56,23 @@ Field types are described in [field-types.md](field-types.md).
 
 ## Consuming the file in the site
 
-LiteEditor only writes the JSON. Your build must import it:
-
-```js
-// Vite / Astro / webpack: JSON imports are supported directly
-import site from '../data/site.json';
-
-console.log(site.theme);
-```
-
-Wrap the import in one module that supplies defaults, so a missing key or an empty value does not break the build:
+LiteEditor only writes the JSON. Read it with the `liteditor` package instead of importing it yourself:
 
 ```ts
-// src/utils/site.ts
-import site from '../data/site.json'
+import { loadConfig, createSite } from 'liteditor'
 
-export const settings = {
-  email: '',
-  copyright: 'Copyright © Jane Doe',
-  ...site,
-}
+const site = createSite((await loadConfig()).config)
+const settings = await site.settings()
+// { theme: 'light', featuredLinks: [...], ...keys you did not declare }
 ```
 
-A field added to `schema` is not in the JSON until someone saves it in the editor, so always provide a default for new fields. Treat an empty string as "hide this element" rather than rendering an empty link.
+`site.settings()` applies the editor's defaults (`""`, `false`, `[]`, the first option of a selection, `#000000`), so a field added to `schema` that nobody has saved yet is never `undefined`, and a missing `site.json` gives defaults instead of an error. The result is typed from `schema`. Treat an empty string as "hide this element" rather than rendering an empty link.
 
 Settings suit short global texts too, such as the first part of a footer line (`short-text`), and not only links and images. Keep fixed credits in your code and put only the editable part in settings.
+
+In Vite, Astro or SvelteKit, the `liteditor/vite` plugin also exposes it as `import { settings } from 'virtual:liteditor'` and reloads the dev server when the file changes (see the [package guide](../packages/liteditor/README.md)).
+
+Without the package, import the JSON directly (`import site from '../data/site.json'`) and spread it over your own defaults.
 
 Because the file is read at build time, a change takes effect once the deploy pipeline has run (see [deployment.md](deployment.md)).
 

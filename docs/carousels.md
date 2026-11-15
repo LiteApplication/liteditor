@@ -2,27 +2,32 @@
 
 A carousel is a named module whose data lives in its own `carousel.json` file. Each entry under `carousels` in `.liteditor` is one carousel, and each one is edited separately in the editor.
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets",
-  "carousels": {
-    "homeHero": {
-      "label": "Home hero",
-      "description": "Slideshow on the home page",
-      "path": "src/assets/carousels/home-hero",
-      "schema": {
-        "alt": { "label": "Alt text", "type": "short-text" },
-        "link": { "label": "Link", "type": "link" }
+```ts
+// liteditor.config.ts
+import { defineConfig, f } from 'liteditor'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  carousels: {
+    homeHero: {
+      label: 'Home hero',
+      description: 'Slideshow on the home page',
+      path: 'src/assets/carousels/home-hero',
+      schema: {                                   // per slide
+        alt: f.text('Alt text'),
+        link: f.link('Link'),
       },
-      "frontmatter": {
-        "autoplay": { "label": "Autoplay", "type": "boolean" },
-        "interval": { "label": "Interval (ms)", "type": "short-text" }
-      }
-    }
-  }
-}
+      frontmatter: {                              // whole carousel
+        autoplay: f.bool('Autoplay'),
+        interval: f.text('Interval (ms)'),
+      },
+    },
+  },
+})
 ```
+
+`npx liteditor generate` writes the matching `.liteditor`.
 
 ## Carousel config
 
@@ -63,17 +68,18 @@ Field types are described in [field-types.md](field-types.md).
 
 ## Consuming the file in the site
 
-Read the JSON at build time and render the slides with your own component:
+```ts
+import { loadConfig, createSite } from 'liteditor'
 
-```js
-import carousel from '../assets/carousels/home-hero/carousel.json';
+const site = createSite((await loadConfig()).config, {
+  assetUrl: (path) => `${import.meta.env.BASE_URL}${path}`,   // optional
+})
 
-for (const slide of carousel.images ?? []) {
-  // slide.src, slide.alt, slide.link
-}
+const hero = await site.carousel('homeHero')
+// { images: [{ src, alt, link }], autoplay, interval }
 ```
 
-Handle a missing file as well: a carousel that was never edited has no `carousel.json`, so the import may fail. Create the file with `{ "images": [] }` in your repository to avoid this.
+`site.carousel()` is typed from the carousel config and fills defaults. A carousel that was never edited has no `carousel.json`: you get `{ images: [], ... }` with defaults instead of a failed import, so there is no need to commit an empty file. `src` is repo-relative, or mapped by `assetUrl` to whatever your templates need.
 
 ## Carousel or custom element?
 

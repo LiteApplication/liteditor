@@ -6,7 +6,7 @@ This tutorial turns a GitHub repository into a LiteEditor-compatible site. It us
 
 A compatible repo needs:
 
-- a `.liteditor` config file at the root,
+- a `.liteditor` config file at the root (you do not write it by hand: it is generated from `liteditor.config.ts` by the [`liteditor` package](kit.md)),
 - a content folder containing `.md` files (`content_path`),
 - an assets folder, which can be empty but must exist (`assets_path`),
 - a deploy workflow that builds and publishes the site.
@@ -14,7 +14,8 @@ A compatible repo needs:
 ```
 my-site/
 ├── .github/workflows/deploy.yml   ← deploy pipeline
-├── .liteditor                     ← LiteEditor config
+├── .liteditor                     ← LiteEditor config (generated)
+├── liteditor.config.ts            ← the config you edit
 └── src/
     ├── assets/
     │   └── .gitkeep               ← assets_path (empty for now)
@@ -23,9 +24,36 @@ my-site/
             └── first-post.md      ← content_path
 ```
 
-## 2. Write the config file
+## 2. Install `liteditor` and define the config
 
-Create `.liteditor` at the repo root. This is the minimal version: one content folder, one asset folder and a `title` field for each post.
+Run this in the repository (it needs a `package.json`; use `npm init -y` if there is none):
+
+```sh
+npm install liteditor
+npx liteditor init
+```
+
+`init` creates `liteditor.config.ts`, the content and assets folders (with `.gitkeep`), a deploy workflow and a first `.liteditor`. It never overwrites an existing file, and its default folders are `src/content/pages` and `src/assets`. Then describe the site in `liteditor.config.ts`, changing `content_path` to `src/content/blog` for this tutorial. This is the minimal version: one content folder, one asset folder and a `title` field for each post.
+
+```ts
+import { defineConfig, f } from 'liteditor'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  frontmatter: {
+    title: f.text('Title'),
+  },
+})
+```
+
+Write `.liteditor` from it:
+
+```sh
+npx liteditor generate
+```
+
+This produces the file LiteEditor reads. Do not edit it: change `liteditor.config.ts` and run `generate` again.
 
 ```json
 {
@@ -40,7 +68,7 @@ Create `.liteditor` at the repo root. This is the minimal version: one content f
 }
 ```
 
-Paths are relative to the repository root and must not start with `/`. See [Configuration](configuration.md) for the full format, including YAML.
+Paths are relative to the repository root and must not start with `/`. See [Configuration](configuration.md) for every key, and [The `liteditor` package](kit.md) for what else it does. The config is also typed, so the data you load later is typed too.
 
 ## 3. Create the first post and the assets folder
 
@@ -58,7 +86,7 @@ My first post, written in LiteEditor.
 
 ## 4. Add the deploy workflow
 
-LiteEditor commits only update the repository. A build pipeline is what makes them visible on the website. The following workflow builds a Node-based static site and publishes it to GitHub Pages. Adapt the build step and `path` to your framework (see [Deployment](deployment.md)).
+LiteEditor commits only update the repository. A build pipeline is what makes them visible on the website. The following workflow builds a Node-based static site and publishes it to GitHub Pages. The two `liteditor` steps are optional but recommended: a bad content edit then fails the build with the file and field, instead of breaking the published site. Adapt the build step and `path` to your framework (see [Deployment](deployment.md)).
 
 `.github/workflows/deploy.yml`:
 
@@ -91,6 +119,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npx liteditor generate --check   # fail if .liteditor is stale
+      - run: npx liteditor check              # fail on invalid content
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -111,13 +141,13 @@ Then, on GitHub, open **Settings → Pages** and set **Source** to **GitHub Acti
 
 ## 5. Commit the setup
 
-Commit and push `.liteditor`, the post, `.gitkeep` and the workflow to the default branch (`main` in the workflow above). The deploy workflow runs once the push lands.
+Check everything with `npx liteditor generate --check && npx liteditor check`, then commit and push `liteditor.config.ts`, the generated `.liteditor`, the post, `.gitkeep` and the workflow to the default branch (`main` in the workflow above). The deploy workflow runs once the push lands.
 
 ## 6. Connect LiteEditor
 
 1. Open your LiteEditor instance and sign in with GitHub. LiteEditor requests the `repo` and `read:user` scopes.
-2. Select your repository. LiteEditor reads `.liteditor` from the default branch.
-3. A missing `.liteditor` shows a "no config" state. An invalid one shows `Config validation error: <path>: <message>`. Fix the file on GitHub and reload.
+2. Select your repository. LiteEditor reads `.liteditor` from the default branch, so the generated file must be committed.
+3. A missing `.liteditor` shows a "no config" state. An invalid one shows `Config validation error: <path>: <message>`. Run `npx liteditor check` locally to see the same problem, fix `liteditor.config.ts`, run `npx liteditor generate`, commit and reload.
 
 ## 7. Make a first edit
 

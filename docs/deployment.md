@@ -14,7 +14,7 @@ Enable GitHub Pages with **Settings → Pages → Build and deployment → Sourc
 
 ## Workflow
 
-The workflow below is the one used by LiteEditor itself, with the LiteEditor-specific checks removed and the build step left for your framework. Save it as `.github/workflows/deploy.yml`:
+The workflow below is the one used by LiteEditor itself, with the build step left for your framework. `npx liteditor init` writes it for you; otherwise save it as `.github/workflows/deploy.yml`:
 
 ```yaml
 name: Deploy to GitHub Pages
@@ -53,6 +53,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check LiteEditor config and content
+        run: |
+          npx liteditor generate --check
+          npx liteditor check
+
       - name: Build
         run: npm run build
 
@@ -72,6 +77,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 ```
+
+The "Check LiteEditor config and content" step uses the [`liteditor` package](kit.md): it fails the build when `.liteditor` is stale or an edit broke a field, instead of publishing a broken site. Remove it if you do not use the package.
 
 Keep `branches: [main]` in sync with the repository's default branch. LiteEditor commits to the default branch, so a different branch name means no deploy.
 

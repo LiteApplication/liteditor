@@ -2,11 +2,12 @@
 
 `assets_path` is the repo-relative folder that holds the images LiteEditor manages. The image picker (for `image` fields and carousel slides) only lists files inside this folder.
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets"
-}
+```ts
+// liteditor.config.ts
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+})
 ```
 
 ## Requirements
@@ -51,5 +52,8 @@ Deleting an image stages its removal. Check carousels and pages that reference i
 
 - In frontmatter and carousel data, reference images with the repo-relative path (`src/assets/blog/cover.jpg`). These values are what the picker writes.
 - In Markdown bodies, use a path that the site build can resolve. A relative path from the page works (`../../assets/blog/hello.png` from `src/content/blog/hello-world.md`), and LiteEditor rewrites it if the image moves.
+
+- The `liteditor` package normalises image paths when it loads content: `../` paths written in element bodies are resolved against the page and returned repo-relative (`src/assets/blog/hello.png`). Pass `assetUrl` to `createSite` to map them to the URL your templates need, for example with the site `base` path.
+- `npx liteditor check` reports image paths that point at a missing file.
 
 Next: [settings.md](settings.md)

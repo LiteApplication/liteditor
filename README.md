@@ -237,4 +237,38 @@ pics:
 ```
 ````
 
-Le rendu côté site est à la charge du dépôt : son build doit transformer ces blocs (par ex. via un plugin remark/markdown-it) en HTML.
+Le rendu côté site est à la charge du dépôt, mais inutile d'analyser ces blocs à la main : le paquet npm [`liteditor`](packages/liteditor/README.md) les lit, applique les valeurs par défaut, normalise les chemins d'images et type les données selon vos `fields`.
+
+```sh
+npm install liteditor
+```
+
+**Avec les blocs** (Astro, Svelte, tout moteur de templates) : `createSite` découpe le corps de chaque page en texte et en éléments.
+
+```ts
+import { loadConfig, createSite } from 'liteditor'
+
+const { config } = await loadConfig()
+const site = createSite(config)
+const page = await site.page('guides/start')
+
+for (const b of page!.blocks) {
+  if (b.type === 'markdown') render(b.value)
+  else if (b.type === 'element' && b.key === 'slider') Slider(b.data) // data.heading, data.pics…
+}
+```
+
+**Avec remark** (le corps reste un seul document Markdown) :
+
+```ts
+import { remarkLiteditorElements } from 'liteditor/remark'
+
+unified().use(remarkParse).use(remarkLiteditorElements, {
+  renderers: {
+    slider: (d, { rank }) => `<section class="slider">${escape(d.heading)}</section>`,
+  },
+  onUnknown: (key, reason) => console.warn(`liteditor-element:${key} ${reason}`),
+})
+```
+
+Les clés inconnues et le YAML invalide restent visibles comme blocs de code. `npx liteditor check` signale ces cas en CI. Détails, plugin Vite et génération de `.liteditor` depuis le code : [README du paquet](packages/liteditor/README.md).

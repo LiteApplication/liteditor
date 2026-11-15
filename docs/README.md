@@ -5,7 +5,7 @@ LiteEditor is a lightweight, web-based CMS that works directly on a GitHub repos
 Key points:
 
 - **No backend.** LiteEditor talks to the GitHub API from the browser. Nothing else needs to be hosted for your site.
-- **One config file.** A `.liteditor` file at the repo root declares which folders hold content and assets, and which fields editors can change.
+- **One config file.** A `.liteditor` file at the repo root declares which folders hold content and assets, and which fields editors can change. You define it in `liteditor.config.ts` with the [`liteditor` package](kit.md) and generate it with `npx liteditor generate`, rather than writing it by hand.
 - **Commits, not databases.** Editing a page, uploading an image or changing a setting creates a commit on the default branch.
 - **Your build publishes the changes.** A deploy pipeline (for example GitHub Pages through GitHub Actions) rebuilds the site after each commit.
 
@@ -24,7 +24,7 @@ Key points:
 11. [Examples](examples.md): complete worked configurations.
 12. [Design guidelines](design-guidelines.md): what to make editable, and common mistakes.
 13. [Schema compatibility](schema-compatibility.md): how config files stay valid across LiteEditor releases.
-14. [The `liteditor` npm package](kit.md): load content at build time and generate `.liteditor` from code.
+14. [The `liteditor` npm package](kit.md): generate `.liteditor` from code and load content at build time. The other pages use it.
 
 Start with steps 1 and 2 if you are setting up a site. If you only operate a LiteEditor instance, go to [Hosting LiteEditor](hosting-liteditor.md).
 

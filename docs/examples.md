@@ -1,6 +1,6 @@
 # Worked examples
 
-Three complete setups, from the smallest possible to a full site. Each one shows the repository tree, the `.liteditor` file, and sample content. All configs below are valid against the current schema.
+Three complete setups, from the smallest possible to a full site. Each one shows the repository tree, the `liteditor.config.ts` you write, and sample content. `npx liteditor generate` turns the config into the `.liteditor` file LiteEditor reads, so you never write that file by hand. All configs below are valid against the current schema.
 
 Paths are repo-relative and never start with `/`.
 
@@ -13,7 +13,8 @@ The editor lists every `.md` file under `content_path` and lets you edit its bod
 ```text
 my-blog/
 ├── .github/workflows/deploy.yml   # build + publish (see deployment notes)
-├── .liteditor
+├── .liteditor                     # generated
+├── liteditor.config.ts
 └── src/
     ├── assets/images/
     │   └── .gitkeep               # keeps the empty assets folder in git
@@ -22,14 +23,18 @@ my-blog/
         └── second-post.md
 ```
 
-### `.liteditor`
+### `liteditor.config.ts`
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets/images"
-}
+```ts
+import { defineConfig } from 'liteditor'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets/images',
+})
 ```
+
+`npx liteditor generate` writes `.liteditor` from it.
 
 ### Sample content
 
@@ -58,7 +63,8 @@ Adds per-post metadata (title, summary, published flag, cover image, accent colo
 ```text
 my-blog/
 ├── .github/workflows/deploy.yml
-├── .liteditor
+├── .liteditor                     # generated
+├── liteditor.config.ts
 └── src/
     ├── assets/images/
     │   ├── cover-hello.jpg
@@ -70,86 +76,34 @@ my-blog/
         └── site.json              # settings_file
 ```
 
-### `.liteditor`
+### `liteditor.config.ts`
 
-JSON:
+```ts
+import { defineConfig, f } from 'liteditor'
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets/images",
-  "settings_file": "src/data/site.json",
-  "schema": {
-    "announcement": {
-      "label": "Banner text",
-      "description": "Shown at the top of every page. Leave empty to hide it.",
-      "type": "short-text"
-    },
-    "showBanner": {
-      "label": "Show banner",
-      "type": "boolean"
-    }
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets/images',
+  settings_file: 'src/data/site.json',
+  schema: {
+    announcement: f.text('Banner text', {
+      description: 'Shown at the top of every page. Leave empty to hide it.',
+    }),
+    showBanner: f.bool('Show banner'),
   },
-  "frontmatter": {
-    "title": {
-      "label": "Title",
-      "type": "short-text"
-    },
-    "description": {
-      "label": "Summary",
-      "description": "Shown in post lists.",
-      "type": "long-text"
-    },
-    "published": {
-      "label": "Published",
-      "type": "boolean"
-    },
-    "cover": {
-      "label": "Cover image",
-      "type": "image"
-    },
-    "accentColor": {
-      "label": "Accent color",
-      "type": "color"
-    }
-  }
-}
+  frontmatter: {
+    title: f.text('Title'),
+    description: f.longText('Summary', { description: 'Shown in post lists.' }),
+    published: f.bool('Published'),
+    cover: f.image('Cover image'),
+    accentColor: f.color('Accent color'),
+  },
+})
 ```
 
-The same file in YAML (LiteEditor reads YAML when the file is not valid JSON):
+Run `npx liteditor generate` to write `.liteditor`.
 
-```yaml
-content_path: src/content/blog
-assets_path: src/assets/images
-settings_file: src/data/site.json
-schema:
-  announcement:
-    label: Banner text
-    description: Shown at the top of every page. Leave empty to hide it.
-    type: short-text
-  showBanner:
-    label: Show banner
-    type: boolean
-frontmatter:
-  title:
-    label: Title
-    type: short-text
-  description:
-    label: Summary
-    description: Shown in post lists.
-    type: long-text
-  published:
-    label: Published
-    type: boolean
-  cover:
-    label: Cover image
-    type: image
-  accentColor:
-    label: Accent color
-    type: color
-```
-
-> `accentColor` uses `"type": "color"` without `alpha`, so the stored value is a 6-digit hex string such as `#3366ff`.
+> `accentColor` uses `f.color` without `alpha`, so the stored value is a 6-digit hex string such as `#3366ff`.
 
 ### Sample content
 
@@ -200,7 +154,8 @@ Adds a home-page carousel and a reusable `callout` block that editors can insert
 ```text
 my-site/
 ├── .github/workflows/deploy.yml
-├── .liteditor
+├── .liteditor                     # generated
+├── liteditor.config.ts
 └── src/
     ├── assets/
     │   ├── images/
@@ -218,103 +173,51 @@ my-site/
         └── site.json
 ```
 
-### `.liteditor`
+### `liteditor.config.ts`
 
-JSON:
+```ts
+import { defineConfig, defineElement, f } from 'liteditor'
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets/images",
-  "settings_file": "src/data/site.json",
-  "schema": {
-    "announcement": {
-      "label": "Banner text",
-      "type": "short-text"
-    },
-    "showBanner": {
-      "label": "Show banner",
-      "type": "boolean"
-    }
+const callout = defineElement({
+  label: 'Callout',
+  description: 'Highlighted box with a heading, text and an optional photo.',
+  fields: {
+    heading: f.text('Heading'),
+    text: f.longText('Text'),
+    photo: f.image('Photo'),
   },
-  "frontmatter": {
-    "title": {
-      "label": "Title",
-      "type": "short-text"
-    },
-    "description": {
-      "label": "Summary",
-      "type": "long-text"
-    },
-    "published": {
-      "label": "Published",
-      "type": "boolean"
-    },
-    "cover": {
-      "label": "Cover image",
-      "type": "image"
-    },
-    "accentColor": {
-      "label": "Accent color",
-      "type": "color"
-    }
+  display: { title: 'heading', description: 'text', images: 'photo' },
+})
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets/images',
+  settings_file: 'src/data/site.json',
+  schema: {
+    announcement: f.text('Banner text'),
+    showBanner: f.bool('Show banner'),
   },
-  "carousels": {
-    "homeHero": {
-      "label": "Home hero",
-      "description": "Slides shown at the top of the home page.",
-      "path": "src/assets/carousels/home-hero",
-      "schema": {
-        "alt": {
-          "label": "Alt text",
-          "type": "short-text"
-        },
-        "link": {
-          "label": "Link",
-          "type": "link"
-        }
-      },
-      "frontmatter": {
-        "autoplay": {
-          "label": "Autoplay",
-          "type": "boolean"
-        },
-        "interval": {
-          "label": "Interval (ms)",
-          "type": "short-text"
-        }
-      }
-    }
+  frontmatter: {
+    title: f.text('Title'),
+    description: f.longText('Summary'),
+    published: f.bool('Published'),
+    cover: f.image('Cover image'),
+    accentColor: f.color('Accent color'),
   },
-  "elements": {
-    "callout": {
-      "label": "Callout",
-      "description": "Highlighted box with a heading, text and an optional photo.",
-      "fields": {
-        "heading": {
-          "label": "Heading",
-          "type": "short-text"
-        },
-        "text": {
-          "label": "Text",
-          "type": "long-text"
-        },
-        "photo": {
-          "label": "Photo",
-          "type": "image"
-        }
-      },
-      "display": {
-        "title": "heading",
-        "description": "text",
-        "images": "photo"
-      }
-    }
-  }
-}
+  carousels: {
+    homeHero: {
+      label: 'Home hero',
+      description: 'Slides shown at the top of the home page.',
+      path: 'src/assets/carousels/home-hero',
+      schema: { alt: f.text('Alt text'), link: f.link('Link') },
+      frontmatter: { autoplay: f.bool('Autoplay'), interval: f.text('Interval (ms)') },
+    },
+  },
+  elements: { callout },
+})
 ```
 
-The `display` block must point at real fields: `title` and `description` need a text field (`short-text`, `long-text` or `link`), and `images` needs an `image` field or a `list` of `image`. Otherwise validation fails.
+The `display` block must point at real fields (`npx liteditor check` tells you if it does not): `title` and `description` need a text field (`short-text`, `long-text` or `link`), and `images` needs an `image` field or a `list` of `image`. Otherwise validation fails.
 
 ### Sample content
 
@@ -368,6 +271,22 @@ photo: src/assets/images/sale.jpg
 Come and see us in store.
 ````
 
-The site build must turn `liteditor-element:` fences into HTML (see the custom elements notes in the README). Without that step, the block shows as a code block.
+The site build must turn `liteditor-element:` fences into HTML. With the package, that is a few lines:
+
+```ts
+import { loadConfig, createSite } from 'liteditor'
+
+const site = createSite((await loadConfig()).config)
+const settings = await site.settings()           // { announcement, showBanner }
+const hero = await site.carousel('homeHero')     // { images, autoplay, interval }
+const page = await site.page('summer-sale')
+
+for (const b of page!.blocks) {
+  if (b.type === 'markdown') renderMarkdown(b.value)
+  else if (b.type === 'element' && b.key === 'callout') Callout(b.data) // data.heading, data.text, data.photo
+}
+```
+
+See [Custom elements](custom-elements.md) for the remark alternative. Without a renderer, the block shows as a code block.
 
 Next: [Design guidelines](design-guidelines.md)

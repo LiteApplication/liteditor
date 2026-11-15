@@ -2,16 +2,48 @@
 
 Everything LiteEditor needs to know about a site is declared in a single file: `.liteditor`, at the root of the repository.
 
+You normally do not write that file by hand. Define the site in `liteditor.config.ts` with the [`liteditor` package](kit.md) and generate it:
+
+```ts
+import { defineConfig, f } from 'liteditor'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  frontmatter: {
+    title: f.text('Title'),
+  },
+})
+```
+
+```sh
+npx liteditor generate           # write .liteditor
+npx liteditor generate --check   # CI: fail if the committed file is stale
+npx liteditor check              # validate the config and all content
+```
+
+The keys are exactly those of `.liteditor`, so everything below applies to both. The JSON and YAML examples show what the generated file contains, or what to write if you choose not to use the package (delete `liteditor.config.ts` and the package reads your hand-written file as is, but data is then not typed).
+
 ## Location and format
 
 - The file is named exactly `.liteditor` and sits at the repo root.
 - It can be written as **JSON** or **YAML**. LiteEditor tries JSON first and falls back to YAML, so both work. Use one format per file.
 - LiteEditor reads the file from the default branch and validates it against the schema. If validation fails, the editor shows the path of the problem and the reason.
-- LiteEditor never rewrites `.liteditor`. Edit it on GitHub like any other file.
+- LiteEditor never rewrites `.liteditor`. With the package, change `liteditor.config.ts` and run `npx liteditor generate`; the generated file is JSON and must be committed.
 
 ## Minimal example
 
-JSON:
+TypeScript (`liteditor.config.ts`):
+
+```ts
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  frontmatter: { title: f.text('Title') },
+})
+```
+
+Generated JSON:
 
 ```json
 {
@@ -39,9 +71,50 @@ frontmatter:
 
 ## Full example
 
-This file uses every top-level key. The JSON and YAML versions describe the same configuration.
+This configuration uses every top-level key. The TypeScript, JSON and YAML versions describe the same site.
 
-JSON:
+TypeScript:
+
+```ts
+import { defineConfig, defineElement, f } from 'liteditor'
+
+const callout = defineElement({
+  label: 'Callout',
+  fields: { heading: f.text('Heading'), body: f.longText('Text') },
+  display: { title: 'heading', description: 'body' },
+})
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  settings_file: 'src/data/site.json',
+  schema: {
+    featuredLinks: f.list('Featured links', f.object('Link', {
+      text: f.text('Text'),
+      url: f.link('URL'),
+    }), { max: 5 }),
+  },
+  frontmatter: {
+    title: f.text('Title'),
+    description: f.longText('Summary'),
+    published: f.bool('Published'),
+    cover: f.image('Cover image'),
+    accent: f.color('Accent color', { alpha: true }),
+  },
+  carousels: {
+    homeHero: {
+      label: 'Home hero',
+      description: 'Slides on the home page',
+      path: 'src/assets/carousels/home-hero',
+      schema: { alt: f.text('Alt text'), link: f.link('Link') },
+      frontmatter: { autoplay: f.bool('Autoplay') },
+    },
+  },
+  elements: { callout },
+})
+```
+
+Generated JSON:
 
 ```json
 {
@@ -97,7 +170,7 @@ JSON:
 }
 ```
 
-YAML:
+The same file in YAML (only if you write it by hand):
 
 ```yaml
 content_path: src/content/blog
@@ -178,7 +251,7 @@ elements:
 | `carousels` | no | Named slideshow modules, each with its own `carousel.json`. See [Carousels](carousels.md). |
 | `elements` | no | Reusable blocks that editors insert into pages. See [Custom elements](custom-elements.md). |
 
-Unknown top-level keys are not reported as errors. They are dropped when LiteEditor parses the file, so they have no effect. Check spelling against this table.
+Unknown top-level keys are not reported as errors. They are dropped when LiteEditor parses the file, so they have no effect. Check spelling against this table. In TypeScript the compiler already rejects unknown keys.
 
 ## Path rules
 
@@ -203,11 +276,11 @@ Unknown top-level keys are not reported as errors. They are dropped when LiteEdi
 - `description`: optional help text.
 - `type`: one of nine types. Omitted means `short-text`.
 
-Each type has its own extra options. See [Field types](field-types.md).
+Each type has its own extra options. See [Field types](field-types.md), which also lists the `f.*` builder for each type.
 
 ## Common validation errors
 
-When validation fails, the editor shows `<path>: <message>` for each problem. The path points at the offending key, so `frontmatter.title.type` means the `type` of the `title` field in `frontmatter`.
+`npx liteditor check` reports these locally, before you push. When validation fails in the editor, it shows `<path>: <message>` for each problem. The path points at the offending key, so `frontmatter.title.type` means the `type` of the `title` field in `frontmatter`.
 
 | Typical cause | Fix |
 |---|---|
@@ -215,6 +288,6 @@ When validation fails, the editor shows `<path>: <message>` for each problem. Th
 | An unknown `type`, such as `text`. | Use one of the nine types in [Field types](field-types.md). |
 | `selection` without `options`, `list` without `itemSchema`, `object` without `fields`. | Add the missing key. |
 | `display.title`/`display.description` in an element points to a missing or non-text field, or `display.images` to a non-image field. | Name an existing `short-text`, `long-text` or `link` field for the text, and an `image` or list-of-`image` field for the images. |
-| Invalid JSON, such as a trailing comma. | LiteEditor then falls back to YAML, which often produces a confusing error. Check commas and quotes first. |
+| Invalid JSON, such as a trailing comma (hand-written files only). | LiteEditor then falls back to YAML, which often produces a confusing error. Check commas and quotes first, or generate the file from `liteditor.config.ts`. |
 
 Next: [Field types](field-types.md)

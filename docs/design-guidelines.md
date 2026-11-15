@@ -1,6 +1,6 @@
 # Design guidelines
 
-A LiteEditor config exposes part of your site to people who do not touch code. Expose too little and they cannot do their job; expose too much and they break the layout or the brand. This page gives a simple rule and a checklist.
+A LiteEditor config (your `liteditor.config.ts`, generated into `.liteditor`) exposes part of your site to people who do not touch code. Expose too little and they cannot do their job; expose too much and they break the layout or the brand. This page gives a simple rule and a checklist.
 
 ## The rule: edit what changes without a deploy
 
@@ -48,7 +48,7 @@ Hardcoding these keeps the editable surface small, so editors cannot accidentall
 
 ## Common mistakes
 
-Run through this list before you commit a `.liteditor` file.
+Run `npx liteditor check` first: it catches most of this list. Then go through the rest before you commit `liteditor.config.ts` and the generated `.liteditor`.
 
 ### Config
 
@@ -60,21 +60,21 @@ Run through this list before you commit a `.liteditor` file.
 - [ ] `elements[*].display.title` and `display.description` name a text field (`short-text`, `long-text` or `link`).
 - [ ] `elements[*].display.images` names an `image` field or a `list` whose `itemSchema` is an `image`.
 - [ ] `settings_file` is accompanied by a `schema`. Without it, the General settings panel has nothing to show.
-- [ ] The file is valid JSON or valid YAML. If it is not, the editor shows a "Config validation error" message on load and names the failing path.
+- [ ] `.liteditor` is up to date (`npx liteditor generate --check`). With a hand-written file, it must be valid JSON or YAML. If it is not, the editor shows a "Config validation error" message on load and names the failing path.
 
 ### Repository
 
 - [ ] `content_path` and `assets_path` exist in the repo. Empty folders need a `.gitkeep`. Carousel folders are created on first save.
-- [ ] Each carousel `path` should contain a `carousel.json`. The editor treats a missing file as `{ "images": [] }`, but the site build may fail to import a missing file, so commit `{ "images": [] }` if there are no slides yet.
+- [ ] A carousel without `carousel.json` is fine: the editor and `site.carousel()` both treat a missing file as `{ "images": [] }`. Only import the JSON directly if you do not use the package, and then commit `{ "images": [] }`.
 - [ ] Image paths in content, settings and carousel data are repo-relative (`src/assets/images/cover.jpg`).
 - [ ] Settings keys match the `schema` keys. A key that is not in the schema does not appear in the General settings panel.
 
 ### Site build
 
 - [ ] A deploy workflow builds the site on push to the default branch. Without it, LiteEditor commits are saved but never go live.
-- [ ] If you use `elements`, the build converts `liteditor-element:<name>` fences into HTML. Otherwise they render as raw code.
-- [ ] If you use carousels, the site reads `carousel.json` and renders each slide.
-- [ ] The site reads the frontmatter keys defined in the `frontmatter` config. After a rename, pages keep the old key until they are edited, so the site must handle both during the transition.
+- [ ] If you use `elements`, the build converts `liteditor-element:<name>` fences into HTML (`blocks` or `liteditor/remark`, see [Custom elements](custom-elements.md)). Otherwise they render as raw code.
+- [ ] If you use carousels, the site reads them with `site.carousel()` and renders each slide.
+- [ ] The site reads the frontmatter keys defined in the `frontmatter` config (`site.pages()` types them). After a rename, pages keep the old key until they are edited, so the site must handle both during the transition.
 
 ### Content
 

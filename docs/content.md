@@ -2,19 +2,21 @@
 
 LiteEditor edits every `.md` file found under `content_path`, recursively. Each file is one page: optional YAML frontmatter followed by a Markdown body.
 
-The examples below use the blog scenario used across these docs:
+The examples below use the blog scenario used across these docs, defined in `liteditor.config.ts` (the `.liteditor` file is generated from it with `npx liteditor generate`):
 
-```json
-{
-  "content_path": "src/content/blog",
-  "assets_path": "src/assets",
-  "frontmatter": {
-    "title": { "label": "Title", "type": "short-text" },
-    "description": { "label": "Summary", "type": "long-text" },
-    "published": { "label": "Published", "type": "boolean" },
-    "cover": { "label": "Cover image", "type": "image" }
-  }
-}
+```ts
+import { defineConfig, f } from 'liteditor'
+
+export default defineConfig({
+  content_path: 'src/content/blog',
+  assets_path: 'src/assets',
+  frontmatter: {
+    title: f.text('Title'),
+    description: f.longText('Summary'),
+    published: f.bool('Published'),
+    cover: f.image('Cover image'),
+  },
+})
 ```
 
 Keys and types of `frontmatter` are described in [configuration.md](configuration.md) and [field-types.md](field-types.md).
@@ -96,5 +98,23 @@ Nothing is written to GitHub until you save and validate the change (see [deploy
 ## Saving
 
 Changed pages are staged in the editor. Validating the changes creates one Git commit on the default branch that contains only the changed files. Unchanged files are not touched, and `.liteditor` is never rewritten.
+
+## Reading pages in the site
+
+Do not write your own frontmatter parser. The `liteditor` package reads every page, applies the defaults above and types the data from `frontmatter`:
+
+```ts
+import { loadConfig, createSite } from 'liteditor'
+
+const site = createSite((await loadConfig()).config)
+const pages = await site.pages()                 // all pages, sorted by path
+const page = await site.page('guides/start')     // by slug, or undefined
+
+page.data    // { title, description, published, cover, ...undeclared keys }
+page.body    // Markdown without the frontmatter
+page.blocks  // body split into Markdown text and custom elements
+```
+
+Draft filtering is then a one-liner: `pages.filter((p) => p.data.published)`. Invalid frontmatter makes the whole file body text, as in the editor. See [Custom elements](custom-elements.md) for `blocks`.
 
 Next: [assets.md](assets.md)

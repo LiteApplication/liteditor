@@ -2,7 +2,15 @@
 
 A field tells LiteEditor which editor control to show and what kind of value to store. Fields are used in four places: `schema` (global settings), `frontmatter` (each Markdown page), carousel `schema` and `frontmatter`, and custom element `fields`.
 
-Every field accepts the same base properties:
+With the [`liteditor` package](kit.md) you write fields with the `f` builders in `liteditor.config.ts`, and `npx liteditor generate` turns them into the JSON shown on this page. The JSON is what ends up in `.liteditor`; the builder for each type is in the table below.
+
+```ts
+import { f } from 'liteditor'
+
+f.longText('Summary', { description: 'Shown in listings.' })
+```
+
+is generated as:
 
 ```json
 {
@@ -18,17 +26,21 @@ Every field accepts the same base properties:
 
 ## The nine types
 
-| Type | Control | Stored value | Extra properties |
-|---|---|---|---|
-| `short-text` | Single-line input | string | none |
-| `long-text` | Multi-line text area | string | none |
-| `boolean` | Toggle | `true` or `false` | none |
-| `image` | Image picker in `assets_path` | repo-relative path string | none |
-| `link` | URL input (placeholder `https://`) | string | none |
-| `color` | Color picker | hex string, `#RRGGBB` or `#RRGGBBAA` | `alpha` |
-| `selection` | Dropdown | the `value` of the chosen option | `options` (required) |
-| `list` | Repeatable list | YAML list | `itemSchema` (required), `max` |
-| `object` | Group of nested fields | YAML mapping | `fields` (required) |
+The table lists the builder and the JSON form of each type. Examples below show the generated JSON.
+
+| Type | Builder | Control | Stored value | Extra properties |
+|---|---|---|---|---|
+| `short-text` | `f.text(label)` | Single-line input | string | none |
+| `long-text` | `f.longText(label)` | Multi-line text area | string | none |
+| `boolean` | `f.bool(label)` | Toggle | `true` or `false` | none |
+| `image` | `f.image(label)` | Image picker in `assets_path` | repo-relative path string | none |
+| `link` | `f.link(label)` | URL input (placeholder `https://`) | string | none |
+| `color` | `f.color(label, { alpha })` | Color picker | hex string, `#RRGGBB` or `#RRGGBBAA` | `alpha` |
+| `selection` | `f.select(label, options)` | Dropdown | the `value` of the chosen option | `options` (required) |
+| `list` | `f.list(label, item, { max })` | Repeatable list | YAML list | `itemSchema` (required), `max` |
+| `object` | `f.object(label, fields)` | Group of nested fields | YAML mapping | `fields` (required) |
+
+Every builder also accepts `{ description }`. `f.select` takes plain strings (`['light', 'dark']`) or `{ value, label }` objects. Because the builders require `options`, `item` and `fields`, the "missing required property" errors below cannot happen in TypeScript.
 
 ### `short-text`
 
@@ -160,7 +172,7 @@ faq:
 
 ## Pitfalls
 
-- **Missing required properties.** `selection` needs `options`, `list` needs `itemSchema`, and `object` needs `fields`. Without them the config fails validation.
+- **Missing required properties** (hand-written `.liteditor` only; the builders enforce them). `selection` needs `options`, `list` needs `itemSchema`, and `object` needs `fields`. Without them the config fails validation.
 - **Properties on the wrong type.** `alpha` only applies to `color`, `options` to `selection`, and `max` to `list`. Other types ignore them, so a misplaced property has no effect.
 - **Missing labels.** An empty `label` leaves the control unlabeled. Always set one.
 - **Choosing a type for static text.** Fields are for values that change without a deploy. See [Design guidelines](design-guidelines.md).
