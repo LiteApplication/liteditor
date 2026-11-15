@@ -4,7 +4,9 @@
  * 1. Requires a clean git work tree and an unused tag.
  * 2. Refuses to release if the schema breaks any snapshot in _history/.
  * 3. Bumps package.json (+ package-lock.json), writes _history/v<version>.schema.json.
- * 4. Commits "release v<version>" and creates the annotated tag v<version>.
+ * 4. If anything under packages/ changed since the previous release tag, also bumps
+ *    packages/liteditor/package.json (+ lock) with the same bump kind (patch for an explicit x.y.z).
+ * 5. Commits "release v<version>" and creates the annotated tag v<version>.
  *
  * Nothing is pushed; the script prints the command to run.
  */
@@ -67,7 +69,28 @@ if (failures.length > 0) {
   fail('schema compatibility check failed')
 }
 
+// Has anything under packages/ changed since the previous release tag?
+const PACKAGE_JSON = join(ROOT, 'packages', 'liteditor', 'package.json')
+let lastTag = ''
+try {
+  lastTag = git('describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*')
+} catch {
+  // No previous release: treat the package as changed.
+}
+const packageChanged = !lastTag || git('diff', '--name-only', lastTag, 'HEAD', '--', 'packages/') !== ''
+let packageVersion = ''
+if (packageChanged && existsSync(PACKAGE_JSON)) {
+  const current = (JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version: string }).version
+  // Same bump kind as the app release; an explicit x.y.z bumps the package by a patch.
+  packageVersion = nextVersion(current, /^\d+\.\d+\.\d+$/.test(bump) ? 'patch' : bump)
+}
+
 if (dryRun) {
+  console.log(
+    packageChanged && packageVersion
+      ? `[dry-run] packages/ changed since ${lastTag || 'the start'}: npm package would be bumped to ${packageVersion}`
+      : `[dry-run] packages/ unchanged since ${lastTag}: npm package version untouched`,
+  )
   console.log(`[dry-run] would release ${tag}: schema compatible, snapshot + commit + tag skipped`)
   process.exit(0)
 }
@@ -91,10 +114,30 @@ if (existsSync(lockPath)) {
 }
 
 const snapshot = writeSnapshot(version, schema)
+const toAdd = ['package.json', 'package-lock.json', snapshot]
 
-git('add', 'package.json', 'package-lock.json', snapshot)
+// Bump the npm package too when anything under packages/ changed since the last release.
+if (packageChanged && packageVersion) {
+  const pkgDir = join(ROOT, 'packages', 'liteditor')
+  const pkgJson = join(pkgDir, 'package.json')
+  const pkgLock = join(pkgDir, 'package-lock.json')
+  bumpJson(pkgJson, (json) => {
+    json.version = packageVersion
+  })
+  if (existsSync(pkgLock)) {
+    bumpJson(pkgLock, (json) => {
+      json.version = packageVersion
+      if (json.packages?.['']) json.packages[''].version = packageVersion
+    })
+    toAdd.push(pkgLock)
+  }
+  toAdd.push(pkgJson)
+}
+
+git('add', ...toAdd)
 git('commit', '-m', `release ${tag}`)
 git('tag', '-a', tag, '-m', `LiteEditor ${tag}`)
 
 console.log(`\nReleased ${tag}. Snapshot: _history/v${version}.schema.json`)
+if (packageChanged) console.log(`npm package liteditor bumped to ${packageVersion}. To publish it: git tag liteditor-v${packageVersion} && git push origin liteditor-v${packageVersion}`)
 console.log(`Push with: git push && git push origin ${tag}`)
