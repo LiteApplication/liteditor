@@ -24,6 +24,20 @@ You describe the site once in `liteditor.config.ts`, and:
 
 If you prefer a hand-written `.liteditor`, delete `liteditor.config.ts`: the loaders read it as is, but data is not typed.
 
+## Direct edit link
+
+`https://editor.liteapp.fr/edit/<github user>/<repo>` opens the editor straight on a site (signing in first if needed). `editUrl()` builds it for you:
+
+```ts
+import { editUrl } from 'liteditor'
+
+editUrl()                                  // https://editor.liteapp.fr/edit/me/site
+editUrl({ repo: 'me/site' })               // override the repository
+editUrl({ editorUrl: 'https://ed.example' }) // override the editor base URL
+```
+
+The repository is read from `LITEDITOR_REPO`, else `GITHUB_REPOSITORY` (set automatically in GitHub Actions, so a GitHub Pages build needs no setup). The base URL comes from `LITEDITOR_URL`. Without a repository (local dev) it returns `undefined`.
+
 Full guide: [packages/liteditor/README.md](../packages/liteditor/README.md).
 
 Next: [Configuration](configuration.md)

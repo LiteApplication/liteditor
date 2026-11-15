@@ -32,7 +32,12 @@ onMounted(async () => {
   if (success) {
     status.value = 'Success! Redirecting…'
     ui.addToast({ type: 'success', title: 'Signed in', message: `Welcome back, ${auth.user?.name ?? auth.user?.login}!` })
-    await router.push({ name: 'repos' })
+    let target: string | null = null
+    try {
+      target = sessionStorage.getItem('liteditor_redirect')
+      sessionStorage.removeItem('liteditor_redirect')
+    } catch { /* ignore */ }
+    await router.push(target && target.startsWith('/edit/') ? target : { name: 'repos' })
   } else {
     status.value = auth.error ?? 'Authentication failed'
     setTimeout(() => router.push({ name: 'login' }), 2500)

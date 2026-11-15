@@ -41,6 +41,12 @@ export default {
     errorContactAdmin: "Please contact your administrator.",
   },
 
+  edit: {
+    opening: "Opening repository…",
+    notFound: "Repository {repo} not found, or you have no access to it.",
+    chooseRepo: "Choose another repository",
+  },
+
   // Editor header
   editor: {
     unsavedChanges: "Unsaved changes",

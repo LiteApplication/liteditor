@@ -131,3 +131,18 @@ test('checkContent: fixture is valid, problems are reported', async () => {
   const bad = await checkContent({ ...config, settings_file: 'src/data/site.json', schema: { announcement: { label: 'A', type: 'boolean' } } }, root)
   assert.ok(bad.some((p) => p.includes('announcement: expected true or false')))
 })
+
+test('editUrl detects the repo from GitHub Actions and honors overrides', async () => {
+  const { editUrl } = await import('../src/index.ts')
+  assert.equal(editUrl({ env: { GITHUB_REPOSITORY: 'me/site' } }), 'https://editor.liteapp.fr/edit/me/site')
+  assert.equal(editUrl({ env: {} }), undefined)
+  assert.equal(
+    editUrl({ env: { GITHUB_REPOSITORY: 'me/site', LITEDITOR_URL: 'https://ed.example/' } }),
+    'https://ed.example/edit/me/site',
+  )
+  assert.equal(
+    editUrl({ repo: 'a/b', editorUrl: 'http://localhost:5173', env: { GITHUB_REPOSITORY: 'me/site' } }),
+    'http://localhost:5173/edit/a/b',
+  )
+  assert.throws(() => editUrl({ repo: 'nope' }))
+})

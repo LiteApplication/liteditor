@@ -41,6 +41,12 @@ export default {
     errorContactAdmin: "Veuillez contacter votre administrateur.",
   },
 
+  edit: {
+    opening: "Ouverture du site…",
+    notFound: "Dépôt {repo} introuvable, ou vous n'y avez pas accès.",
+    chooseRepo: "Choisir un autre site",
+  },
+
   // Editor header
   editor: {
     unsavedChanges: "Modifications non sauvegardées",
