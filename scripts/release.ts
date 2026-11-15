@@ -5,7 +5,7 @@
  * 2. Refuses to release if the schema breaks any snapshot in _history/.
  * 3. Bumps package.json (+ package-lock.json), writes _history/v<version>.schema.json.
  * 4. If anything under packages/ changed since the previous release tag, also bumps
- *    packages/liteditor/package.json (+ lock) with the same bump kind (patch for an explicit x.y.z).
+ *    packages/liteditor/package.json (+ lock) to the new site version (it lags behind otherwise).
  * 5. Commits "release v<version>" and creates the annotated tag v<version>.
  *
  * Nothing is pushed; the script prints the command to run.
@@ -81,8 +81,13 @@ const packageChanged = !lastTag || git('diff', '--name-only', lastTag, 'HEAD', '
 let packageVersion = ''
 if (packageChanged && existsSync(PACKAGE_JSON)) {
   const current = (JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version: string }).version
-  // Same bump kind as the app release; an explicit x.y.z bumps the package by a patch.
-  packageVersion = nextVersion(current, /^\d+\.\d+\.\d+$/.test(bump) ? 'patch' : bump)
+  // Sync with the site version. The package only moves when packages/ changed, so it can lag behind.
+  // npm versions never go backwards: if the package is already at or above the site version, patch it.
+  const cmp = (a: string, b: string) => {
+    const [x, y] = [a, b].map((v) => v.split('.').map(Number))
+    return (x![0]! - y![0]!) || (x![1]! - y![1]!) || (x![2]! - y![2]!)
+  }
+  packageVersion = cmp(version, current) > 0 ? version : nextVersion(current, 'patch')
 }
 
 if (dryRun) {
